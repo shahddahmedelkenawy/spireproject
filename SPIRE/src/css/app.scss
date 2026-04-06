@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+// app global css in SCSS form
+// Ensure full viewport height so layouts and pages display correctly
+html {
+  --spire-text-scale: 1;
+  font-size: calc(16px * var(--spire-text-scale));
+}
+
+html, body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+
+/* ---- Global accessibility (driven by accessibilityStore + html data attributes) ---- */
+
+/* Skip link: first focusable in App.vue */
+.spire-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100000;
+  padding: 12px 16px;
+  margin: 8px;
+  background: #0a0a0a;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.spire-skip-link:focus,
+.spire-skip-link:focus-visible {
+  left: max(8px, env(safe-area-inset-left));
+  top: max(8px, env(safe-area-inset-top));
+  outline: 3px solid #ffeb3b;
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Letter spacing */
+html[data-a11y-letter-spacing="moderate"] #q-app {
+  letter-spacing: 0.06em;
+  word-spacing: 0.04em;
+}
+
+html[data-a11y-letter-spacing="wide"] #q-app {
+  letter-spacing: 0.12em;
+  word-spacing: 0.08em;
+}
+
+/* Highlight selection & links (reading support) */
+html[data-a11y-highlight="true"] #q-app ::selection {
+  background-color: rgba(255, 235, 59, 0.55);
+  color: inherit;
+}
+
+html[data-a11y-highlight="true"] #q-app a:not(.spire-skip-link) {
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+}
+
+/* Hide images (decorative/content photos); Quasar icons use fonts, not img */
+html[data-a11y-hide-images="true"] #q-app img {
+  opacity: 0 !important;
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+}
+
+html[data-a11y-hide-images="true"] #q-app .q-img {
+  min-height: 0 !important;
+}
+
+html[data-a11y-hide-images="true"] #q-app .q-img__image {
+  display: none !important;
+}
+
+html[data-a11y-hide-images="true"] #q-app .q-img__content {
+  display: none !important;
+}
+
+/* Hide tooltips (Quasar) */
+html[data-a11y-hide-tooltips="true"] .q-tooltip {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Pause / reduce animations */
+html[data-a11y-reduced-motion="true"] #q-app *,
+html[data-a11y-reduced-motion="true"] #q-app *::before,
+html[data-a11y-reduced-motion="true"] #q-app *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-a11y-reduced-motion="true"] #q-app *,
+  html[data-a11y-reduced-motion="true"] #q-app *::before,
+  html[data-a11y-reduced-motion="true"] #q-app *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Screen reader / keyboard: stronger focus visibility */
+html[data-a11y-sr-mode="true"] #q-app :focus-visible {
+  outline: 3px solid #1565c0 !important;
+  outline-offset: 3px !important;
+}
+
+html[data-a11y-sr-mode="true"] #q-app a:focus-visible,
+html[data-a11y-sr-mode="true"] #q-app button:focus-visible,
+html[data-a11y-sr-mode="true"] #q-app .q-btn:focus-visible,
+html[data-a11y-sr-mode="true"] #q-app .q-field:focus-within {
+  outline: 3px solid #1565c0 !important;
+  outline-offset: 2px !important;
+}
+
+#q-app {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+// Optional: max-width container for preview on larger screens
+@media (min-width: 420px) {
+  body {
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+  }
+}
+
+/* First letter of each label word (field values use JS blur/save rules, not forced lowercasing). */
+#q-app .q-field__label {
+  text-transform: capitalize;
+}
