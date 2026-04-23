@@ -5,6 +5,6 @@ export const ASSISTANT_PEER_ID = 'spire-assistant'
 export const assistantConversationDefaults = {
   peerId: ASSISTANT_PEER_ID,
   name: 'Spira',
-  badge: 'AI Assistant',
-  preview: 'Ask me anything about your job journey.',
+  badge: 'Your assistant',
+  preview: 'Jobs, hiring & using Spire. Ask me anything.',
 }

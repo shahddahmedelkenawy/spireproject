@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <q-page class="page">
     <div class="inner">
       <h1>Friend Requests</h1>

@@ -1,11 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&display=swap');
 
 // app global css in SCSS form
 // Ensure full viewport height so layouts and pages display correctly
 html {
   --spire-text-scale: 1;
-  font-size: calc(16px * var(--spire-text-scale));
+  --spire-text-zoom: 1;
+  --spire-line-height: normal;
+  font-size: 16px;
 }
+
+/* Scales entire #q-app (layouts, headers, pages). Teleported dialogs stay unscaled. */
 
 html, body {
   min-height: 100vh;
@@ -58,15 +63,112 @@ html, body {
   border: 0 !important;
 }
 
-/* Letter spacing */
-html[data-a11y-letter-spacing="moderate"] #q-app {
-  letter-spacing: 0.06em;
-  word-spacing: 0.04em;
+
+/* Text spacing — app chrome + pages (dialog is outside #q-app when teleported) */
+html[data-a11y-text-spacing="light"] #q-app {
+  letter-spacing: 0.02em;
+  word-spacing: 0.02em;
 }
 
-html[data-a11y-letter-spacing="wide"] #q-app {
-  letter-spacing: 0.12em;
-  word-spacing: 0.08em;
+html[data-a11y-text-spacing="moderate"] #q-app {
+  letter-spacing: 0.07em;
+  word-spacing: 0.05em;
+}
+
+html[data-a11y-text-spacing="heavy"] #q-app {
+  letter-spacing: 0.14em;
+  word-spacing: 0.1em;
+}
+
+/*
+ * Text align — only when a non-Default option is chosen (no attr = no override).
+ * Do NOT revert .row / .column / .flex: they wrap almost all page text; revert hid the effect.
+ */
+html[data-a11y-text-align] #q-app {
+  text-align: var(--spire-text-align) !important;
+}
+
+/* Propagate to text nodes; scoped page styles still win unless !important — inherit fixes most views */
+html[data-a11y-text-align] #q-app *:not(.q-icon):not(.material-icons) {
+  text-align: inherit !important;
+}
+
+/* Top chrome only: keep toolbar/tab bar layout (flex + title position) */
+html[data-a11y-text-align] #q-app .q-toolbar,
+html[data-a11y-text-align] #q-app .q-toolbar-row,
+html[data-a11y-text-align] #q-app .q-header .q-toolbar,
+html[data-a11y-text-align] #q-app .q-tabs__header {
+  text-align: revert !important;
+}
+
+/* Justify: avoid stretched button labels */
+html[data-a11y-text-align="justify"] #q-app .q-btn,
+html[data-a11y-text-align="justify"] #q-app button:not(.spire-skip-link),
+html[data-a11y-text-align="justify"] #q-app .q-chip {
+  text-align: center !important;
+}
+
+/* Line height — 1.5 / 1.75 / 2 (unitless multipliers from store) */
+html[data-a11y-line-height] #q-app {
+  line-height: var(--spire-line-height) !important;
+}
+
+html[data-a11y-line-height] #q-app *:not(.q-icon):not(.material-icons):not(svg):not(img):not(video):not(canvas) {
+  line-height: inherit !important;
+}
+
+/* Tall line-height: avoid clipping single-line inputs */
+html[data-a11y-line-height="1.75"] #q-app .q-field__native:not(textarea),
+html[data-a11y-line-height="2"] #q-app .q-field__native:not(textarea) {
+  min-height: 2.75em;
+}
+
+/* Dyslexia-friendly font */
+html[data-a11y-dyslexia="true"] #q-app {
+  font-family: 'Lexend', 'Inter', system-ui, sans-serif !important;
+}
+
+/* Larger visible cursor (64×64, hotspot center) — app-wide; FAB uses grab */
+html[data-a11y-big-cursor="true"] #q-app,
+html[data-a11y-big-cursor="true"] #q-app * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='18' fill='%23ffffff' stroke='%234b1e5a' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%234b1e5a'/%3E%3C/svg%3E")
+      32 32,
+    pointer !important;
+}
+
+html[data-a11y-big-cursor="true"] .a11y-float-btn {
+  cursor: grab !important;
+}
+
+html[data-a11y-big-cursor="true"] .a11y-float-btn:active {
+  cursor: grabbing !important;
+}
+
+/* Accessibility panel is often teleported outside #q-app */
+html[data-a11y-big-cursor="true"] .a11y-dialog-outer,
+html[data-a11y-big-cursor="true"] .a11y-dialog-outer * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='18' fill='%23ffffff' stroke='%234b1e5a' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%234b1e5a'/%3E%3C/svg%3E")
+      32 32,
+    pointer !important;
+}
+
+/* Reading mask/guide overlays: default cursor so pointer tracking stays smooth */
+html[data-a11y-cursor-mode="readingMask"] .a11y-mask-line,
+html[data-a11y-cursor-mode="readingMask"] .a11y-mask-line *,
+html[data-a11y-cursor-mode="readingGuide"] .a11y-reading-guide,
+html[data-a11y-cursor-mode="readingGuide"] .a11y-reading-guide * {
+  cursor: default !important;
+}
+
+/* Contrast theme hints (works with store filters) */
+html[data-a11y-contrast-preset="dark"] #q-app {
+  background: #0a0a0a !important;
+  color: #f0f0f0 !important;
+}
+
+html[data-a11y-contrast-preset="light"] #q-app {
+  background: #fafafa !important;
+  color: #111 !important;
 }
 
 /* Highlight selection & links (reading support) */
@@ -110,9 +212,9 @@ html[data-a11y-hide-tooltips="true"] .q-tooltip {
 }
 
 /* Pause / reduce animations */
-html[data-a11y-reduced-motion="true"] #q-app *,
-html[data-a11y-reduced-motion="true"] #q-app *::before,
-html[data-a11y-reduced-motion="true"] #q-app *::after {
+html[data-a11y-pause-motion="true"] #q-app *,
+html[data-a11y-pause-motion="true"] #q-app *::before,
+html[data-a11y-pause-motion="true"] #q-app *::after {
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
@@ -120,9 +222,9 @@ html[data-a11y-reduced-motion="true"] #q-app *::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html[data-a11y-reduced-motion="true"] #q-app *,
-  html[data-a11y-reduced-motion="true"] #q-app *::before,
-  html[data-a11y-reduced-motion="true"] #q-app *::after {
+  html[data-a11y-pause-motion="true"] #q-app *,
+  html[data-a11y-pause-motion="true"] #q-app *::before,
+  html[data-a11y-pause-motion="true"] #q-app *::after {
     animation: none !important;
     transition: none !important;
   }
@@ -142,9 +244,18 @@ html[data-a11y-sr-mode="true"] #q-app .q-field:focus-within {
   outline-offset: 2px !important;
 }
 
+/* Text size: default zoom 1; actual scale applied inline on #q-app in accessibilityStore.applyToDOM */
 #q-app {
   min-height: 100vh;
   min-height: 100dvh;
+  max-width: 100%;
+  box-sizing: border-box;
+  zoom: 1;
+}
+
+html[data-a11y-text-size="larger"] #q-app,
+html[data-a11y-text-size="largest"] #q-app {
+  overflow-x: hidden;
 }
 
 // Optional: max-width container for preview on larger screens

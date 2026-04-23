@@ -153,6 +153,7 @@ import { computed, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'src/stores/authStore'
+import { firebaseErrorMessage } from 'src/utils/firebaseErrorMessages'
 import logoSrc from 'src/assets/logo.png'
 
 const router = useRouter()
@@ -212,7 +213,7 @@ async function onSubmit() {
     console.error('Sign up failed:', error)
     $q.notify({
       type: 'negative',
-      message: error?.message || 'Sign up failed. Check your connection and try again.',
+      message: firebaseErrorMessage(error),
       position: 'top',
     })
   } finally {

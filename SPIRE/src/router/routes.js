@@ -117,7 +117,6 @@ const routes = [
       { path: 'post-job/new', component: () => import('pages/EmployerPostJobFormPage.vue') },
       { path: 'post-job/edit/:jobId', component: () => import('pages/EmployerPostJobFormPage.vue') },
       { path: 'messages', component: () => import('pages/EmployerMessagesPage.vue') },
-      { path: 'notifications', component: () => import('pages/NotificationsPage.vue') },
       {
         path: 'messages/chat/:peerId',
         component: () => import('pages/ChatConversationPage.vue'),

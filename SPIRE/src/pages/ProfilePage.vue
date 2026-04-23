@@ -498,7 +498,7 @@
         ref="avatarFileRef"
         v-model="avatarFileModel"
         class="jsp-hidden-file"
-        accept="image/*"
+        accept="*/*"
         max-files="1"
         @update:model-value="onAvatarFile"
       />
@@ -507,21 +507,18 @@
         ref="cvNativeInput"
         type="file"
         class="jsp-native-file"
-        accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         @change="onCvFileChange"
       >
       <input
         ref="medicalNativeInput"
         type="file"
         class="jsp-native-file"
-        accept=".pdf,.doc,.docx,image/*,application/pdf"
         @change="onMedicalFileChange"
       >
       <input
         ref="disabilityNativeInput"
         type="file"
         class="jsp-native-file"
-        accept=".pdf,.doc,.docx,image/*,application/pdf"
         @change="onDisabilityFileChange"
       >
     </div>
@@ -545,6 +542,7 @@ import {
   attachMedicalFileToProfile,
 } from 'src/services/iqTestService'
 import { capitalizeProseWords } from 'src/utils/textFormat'
+import { firebaseErrorMessage } from 'src/utils/firebaseErrorMessages'
 
 const userStore = useUserStore()
 const authStore = useAuthStore()
@@ -754,7 +752,7 @@ async function onAvatarFile(file) {
     $q.notify({ type: 'positive', message: 'Profile photo updated', position: 'top' })
   } catch (e) {
     console.error(e)
-    $q.notify({ type: 'negative', message: e?.message || 'Upload failed', position: 'top' })
+    $q.notify({ type: 'negative', message: firebaseErrorMessage(e), position: 'top' })
   }
 }
 
@@ -1058,7 +1056,7 @@ async function onCvFile(file) {
     $q.notify({ type: 'positive', message: 'CV uploaded', position: 'top' })
   } catch (e) {
     console.error(e)
-    $q.notify({ type: 'negative', message: e?.message || 'Upload failed', position: 'top' })
+    $q.notify({ type: 'negative', message: firebaseErrorMessage(e), position: 'top' })
   }
 }
 
@@ -1072,7 +1070,7 @@ async function onMedicalFile(file) {
     $q.notify({ type: 'positive', message: 'Medical file uploaded', position: 'top' })
   } catch (e) {
     console.error(e)
-    $q.notify({ type: 'negative', message: e?.message || 'Upload failed', position: 'top' })
+    $q.notify({ type: 'negative', message: firebaseErrorMessage(e), position: 'top' })
   }
 }
 
@@ -1085,7 +1083,7 @@ async function onDisabilityFile(file) {
     $q.notify({ type: 'positive', message: 'Disability card uploaded', position: 'top' })
   } catch (e) {
     console.error(e)
-    $q.notify({ type: 'negative', message: e?.message || 'Upload failed', position: 'top' })
+    $q.notify({ type: 'negative', message: firebaseErrorMessage(e), position: 'top' })
   }
 }
 

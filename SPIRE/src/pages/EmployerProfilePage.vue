@@ -213,7 +213,7 @@
               ref="companyLogoInput"
               type="file"
               class="emp-native-file"
-              accept="image/*"
+              accept="*/*"
               @change="onPendingCompanyLogo"
             >
           </div>
@@ -267,7 +267,7 @@
               ref="employerPhotoInput"
               type="file"
               class="emp-native-file"
-              accept="image/*"
+              accept="*/*"
               @change="onPendingEmployerPhoto"
             >
           </div>
@@ -358,7 +358,7 @@
             ref="dialogCompanyLogoInput"
             type="file"
             class="emp-native-file"
-            accept="image/*"
+            accept="*/*"
             @change="onDialogCompanyLogo"
           >
         </q-card-section>
@@ -401,7 +401,7 @@
                 ref="dialogEmployerPhotoInput"
                 type="file"
                 class="emp-native-file"
-                accept="image/*"
+                accept="*/*"
                 @change="onDialogEmployerPhoto"
               >
             </div>

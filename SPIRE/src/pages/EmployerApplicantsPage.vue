@@ -51,14 +51,16 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 import EmployerApplicantCard from 'src/components/EmployerApplicantCard.vue'
 import EmployerStickyHeader from 'src/components/EmployerStickyHeader.vue'
 import { useAuthStore } from 'src/stores/authStore'
 import { getApplicationsForEmployer, updateApplicationStatus } from 'src/services/applicationService'
 
 const router = useRouter()
+const $q = useQuasar()
 const authStore = useAuthStore()
 const applicants = ref([])
 const applicantSearch = ref('')
@@ -96,15 +98,38 @@ function openApplicant(id) {
 }
 
 async function markStatus(id, status) {
-  await updateApplicationStatus(id, status, authStore.user?.uid)
-  const item = applicants.value.find((a) => a.id === id)
-  if (item) item.status = status
+  try {
+    await updateApplicationStatus(id, status, authStore.user?.uid)
+    const item = applicants.value.find((a) => a.id === id)
+    if (item) item.status = status
+    $q.notify({ type: 'positive', message: `Application ${status}`, position: 'top' })
+  } catch (e) {
+    console.error(e)
+    $q.notify({
+      type: 'negative',
+      message: e?.message || 'Could not update application. Deploy latest Firestore rules.',
+      position: 'top',
+    })
+  }
 }
 
-onMounted(async () => {
-  if (!authStore.user?.uid) return
-  applicants.value = await getApplicationsForEmployer(authStore.user.uid)
-})
+async function loadApplicants() {
+  const uid = authStore.user?.uid
+  if (!uid) return
+  try {
+    applicants.value = await getApplicationsForEmployer(uid)
+  } catch (e) {
+    console.error('[EmployerApplicants]', e)
+  }
+}
+
+watch(
+  () => authStore.user?.uid,
+  (uid) => {
+    if (uid) void loadApplicants()
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped>

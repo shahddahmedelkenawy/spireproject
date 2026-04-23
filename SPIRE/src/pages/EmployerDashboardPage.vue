@@ -117,7 +117,10 @@
       </div>
 
       <div class="applicants-head">
-        <h2 class="section-title">My Applicants</h2>
+        <div class="applicants-head-text">
+          <h2 class="section-title">My Applicants</h2>
+          <p class="section-sub">Accepted candidates only</p>
+        </div>
         <q-btn
           flat
           no-caps
@@ -128,7 +131,14 @@
         />
       </div>
 
-      <div class="cards">
+      <p v-if="!filteredApplicants.length" class="dash-applicants-empty">
+        {{
+          hasAcceptedApplicants
+            ? 'No accepted applicants match your search or filters.'
+            : 'No accepted applicants yet.'
+        }}
+      </p>
+      <div v-else class="cards">
         <EmployerApplicantCard
           v-for="applicant in filteredApplicants"
           :key="applicant.id"
@@ -143,18 +153,20 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 import EmployerApplicantCard from 'src/components/EmployerApplicantCard.vue'
 import EmployerStickyHeader from 'src/components/EmployerStickyHeader.vue'
 import { useAuthStore } from 'src/stores/authStore'
 import { useUserStore } from 'src/stores/userStore'
 import { getApplicationsForEmployer, updateApplicationStatus } from 'src/services/applicationService'
-import { getCompanyByOwner } from 'src/services/companyService'
+import { listCompaniesByOwner } from 'src/services/companyService'
 import { listCompanyJobs } from 'src/services/jobService'
 import { capitalizeProseWords } from 'src/utils/textFormat'
 
 const router = useRouter()
+const $q = useQuasar()
 const authStore = useAuthStore()
 const userStore = useUserStore()
 const applicants = ref([])
@@ -244,8 +256,18 @@ function applicantSearchHaystack(a) {
     .toLowerCase()
 }
 
+function isAcceptedStatus(status) {
+  return String(status || '').toLowerCase() === 'accepted'
+}
+
+/** At least one application is accepted (before search/filters). */
+const hasAcceptedApplicants = computed(() =>
+  applicants.value.some((a) => isAcceptedStatus(a.status))
+)
+
 const filteredApplicants = computed(() => {
-  const list = applicants.value.filter((a) => {
+  const acceptedOnly = applicants.value.filter((a) => isAcceptedStatus(a.status))
+  const list = acceptedOnly.filter((a) => {
     const words = search.value.toLowerCase().trim().split(/\s+/).filter(Boolean)
     const searchOk = !words.length || words.every((w) => applicantSearchHaystack(a).includes(w))
     if (!searchOk) return false
@@ -282,10 +304,11 @@ const activeJobsCount = computed(() =>
 const closedJobsCount = computed(() =>
   companyJobs.value.filter((job) => (job.status || 'open') !== 'open').length
 )
-const acceptedCount = computed(() => applicants.value.filter((a) => a.status === 'accepted').length)
+/** Closed job posts vs all job posts (matches “Filled Positions vs Total Positions”). */
 const hiringProgress = computed(() => {
-  if (!applicants.value.length) return 0
-  return Math.round((acceptedCount.value / applicants.value.length) * 100)
+  const total = companyJobs.value.length
+  if (!total) return 0
+  return Math.round((closedJobsCount.value / total) * 100)
 })
 
 function openApplicant(id) {
@@ -293,9 +316,19 @@ function openApplicant(id) {
 }
 
 async function markStatus(id, status) {
-  await updateApplicationStatus(id, status, authStore.user?.uid)
-  const item = applicants.value.find((a) => a.id === id)
-  if (item) item.status = status
+  try {
+    await updateApplicationStatus(id, status, authStore.user?.uid)
+    const item = applicants.value.find((a) => a.id === id)
+    if (item) item.status = status
+    $q.notify({ type: 'positive', message: `Application ${status}`, position: 'top' })
+  } catch (e) {
+    console.error(e)
+    $q.notify({
+      type: 'negative',
+      message: e?.message || 'Could not update application. Deploy latest Firestore rules.',
+      position: 'top',
+    })
+  }
 }
 
 function setFilter(key, value) {
@@ -323,13 +356,28 @@ function onSearchBarClick(evt) {
 async function loadDashboardData() {
   const uid = authStore.user?.uid
   if (!uid) return
-  await userStore.fetchProfile(uid)
-  applicants.value = await getApplicationsForEmployer(uid)
-  company.value = await getCompanyByOwner(uid)
-  companyJobs.value = company.value?.id ? await listCompanyJobs(company.value.id) : []
+  try {
+    await userStore.fetchProfile(uid)
+    const companies = await listCompaniesByOwner(uid)
+    company.value = companies[0] ?? null
+    const jobsFlat = []
+    for (const c of companies) {
+      jobsFlat.push(...(await listCompanyJobs(c.id)))
+    }
+    companyJobs.value = jobsFlat
+    applicants.value = await getApplicationsForEmployer(uid)
+  } catch (e) {
+    console.error('[EmployerDashboard]', e)
+  }
 }
 
-onMounted(loadDashboardData)
+watch(
+  () => authStore.user?.uid,
+  (uid) => {
+    if (uid) void loadDashboardData()
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped>
@@ -546,9 +594,14 @@ onMounted(loadDashboardData)
 
 .applicants-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 12px;
   margin: 14px 0 8px;
+}
+
+.applicants-head-text {
+  min-width: 0;
 }
 
 .section-title {
@@ -556,6 +609,19 @@ onMounted(loadDashboardData)
   font-size: 20px;
   font-weight: 600;
   color: #222;
+}
+
+.section-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #8a8a8a;
+}
+
+.dash-applicants-empty {
+  margin: 12px 0 20px;
+  font-size: 14px;
+  color: #8a8a8a;
+  text-align: center;
 }
 
 .sort-btn {

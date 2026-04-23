@@ -48,12 +48,17 @@ export async function getCompany(companyId) {
   return snap.exists() ? { id: snap.id, ...snap.data() } : null
 }
 
-export async function getCompanyByOwner(ownerId) {
+/** All company docs where ownerId matches (employer may have more than one in edge cases). */
+export async function listCompaniesByOwner(ownerId) {
+  if (!ownerId) return []
   const q = query(collection(db, 'companies'), where('ownerId', '==', ownerId))
   const snap = await getDocs(q)
-  if (snap.empty) return null
-  const d = snap.docs[0]
-  return { id: d.id, ...d.data() }
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
+export async function getCompanyByOwner(ownerId) {
+  const list = await listCompaniesByOwner(ownerId)
+  return list[0] ?? null
 }
 
 export async function listAllCompanies() {

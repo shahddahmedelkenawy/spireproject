@@ -15,10 +15,9 @@
         align="justify"
       >
         <q-route-tab to="/employer/dashboard" name="dashboard" icon="dashboard" label="Dashboard" />
-        <q-route-tab to="/employer/applicants" name="applicants" icon="groups" label="My Applicants" />
+        <q-route-tab to="/employer/applicants" name="applicants" icon="groups" label="Applicants" />
         <q-route-tab to="/employer/post-job" name="post-job" icon="add_circle_outline" label="Post Job" />
         <q-route-tab to="/employer/messages" name="messages" icon="chat_bubble_outline" label="Messages" />
-        <q-route-tab to="/employer/notifications" name="notifications" icon="notifications" label="Alerts" />
         <q-route-tab to="/employer/profile" name="profile" icon="person_outline" label="Profile" />
       </q-tabs>
     </q-footer>
@@ -39,7 +38,6 @@ const activeTab = computed(() => {
   if (route.path.includes('/employer/applicants')) return 'applicants'
   if (route.path.includes('/employer/post-job')) return 'post-job'
   if (route.path.includes('/employer/messages')) return 'messages'
-  if (route.path.includes('/employer/notifications')) return 'notifications'
   if (route.path.includes('/employer/profile')) return 'profile'
   return 'dashboard'
 })

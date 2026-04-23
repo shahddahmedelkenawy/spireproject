@@ -2,14 +2,15 @@ import { db } from 'src/boot/firebase'
 import {
   addDoc,
   collection,
+  doc,
   getDocs,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
-  where,
   updateDoc,
-  doc,
+  where,
+  writeBatch,
 } from 'firebase/firestore'
 import { ASSISTANT_PEER_ID } from 'src/constants/messaging'
 import { addNotification } from './notificationService'
@@ -138,6 +139,41 @@ export function subscribeChatHistory(userA, userB, onUpdate, onError) {
 
 export async function markMessageSeen(messageId) {
   await updateDoc(doc(db, 'messages', messageId), { seen: true })
+}
+
+const BATCH_SIZE = 450
+
+/**
+ * Deletes all messages between two participants (both directions). Uses batched writes (max 500 ops per batch).
+ */
+export async function deleteAllMessagesInThread(userId, peerId) {
+  if (!userId || !peerId) {
+    throw new Error('deleteAllMessagesInThread: userId and peerId are required')
+  }
+  const q1 = query(
+    collection(db, 'messages'),
+    where('senderId', '==', userId),
+    where('receiverId', '==', peerId),
+    orderBy('createdAt', 'asc'),
+  )
+  const q2 = query(
+    collection(db, 'messages'),
+    where('senderId', '==', peerId),
+    where('receiverId', '==', userId),
+    orderBy('createdAt', 'asc'),
+  )
+  const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)])
+  const ids = [...snap1.docs, ...snap2.docs].map((d) => d.id)
+  if (!ids.length) return
+
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    const slice = ids.slice(i, i + BATCH_SIZE)
+    const batch = writeBatch(db)
+    for (const id of slice) {
+      batch.delete(doc(db, 'messages', id))
+    }
+    await batch.commit()
+  }
 }
 
 export async function listUserConversations(userId) {

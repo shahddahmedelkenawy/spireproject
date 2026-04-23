@@ -15,11 +15,11 @@
   >
     {{ liveAnnouncement }}
   </div>
-  <AccessibilityFab />
+  <AccessibilityPanel />
 </template>
 
 <script setup>
-import { watch } from 'vue'
+import { onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
 function skipToMainContent() {
@@ -31,7 +31,7 @@ function skipToMainContent() {
 import { useAuthStore } from 'src/stores/authStore'
 import { useNotificationStore } from 'src/stores/notificationStore'
 import { useAccessibilityStore } from 'src/stores/accessibilityStore'
-import AccessibilityFab from 'src/components/AccessibilityFab.vue'
+import AccessibilityPanel from 'src/components/AccessibilityPanel.vue'
 
 const authStore = useAuthStore()
 const notificationStore = useNotificationStore()
@@ -39,6 +39,10 @@ const accessibilityStore = useAccessibilityStore()
 const { liveAnnouncement } = storeToRefs(accessibilityStore)
 
 accessibilityStore.loadFromStorage()
+
+onMounted(() => {
+  accessibilityStore.apply()
+})
 
 watch(
   () => authStore.user?.uid,

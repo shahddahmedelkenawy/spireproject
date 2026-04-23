@@ -11,8 +11,6 @@
       />
     </header>
 
-    <img :src="signInIcon" alt="Accessibility icon" class="accessibility-icon" />
-
     <q-carousel
       v-model="currentSlide"
       swipeable
@@ -96,7 +94,6 @@ import { useRouter, useRoute } from 'vue-router'
 import p1 from 'src/assets/page 1.png'
 import p2 from 'src/assets/page 2.svg'
 import p3 from 'src/assets/page 3.png'
-import signInIcon from 'src/assets/accessbility.png'
 
 const router = useRouter()
 const route = useRoute()
@@ -313,13 +310,5 @@ function goToSignUp(role) {
 
 .nav-arrow--right {
   align-self: flex-end;
-}
-
-.accessibility-icon {
-  position: absolute;
-  left: 16px;
-  top: 40%;
-  width: 32px;
-  height: 32px;
 }
 </style>

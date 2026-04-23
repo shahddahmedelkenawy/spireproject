@@ -31,9 +31,18 @@
       <q-btn flat round dense icon="search" class="chat-top-icon" aria-label="Search" @click="showSearch = !showSearch" />
       <q-btn flat round dense icon="more_vert" class="chat-top-icon" aria-label="Menu">
         <q-menu anchor="bottom right" self="top right">
-          <q-list dense style="min-width: 160px">
-            <q-item v-close-popup clickable @click="clearLocalSearch">
+          <q-list dense style="min-width: 180px">
+            <q-item clickable v-close-popup @click="clearLocalSearch">
               <q-item-section>Clear search</q-item-section>
+            </q-item>
+            <q-separator />
+            <q-item
+              clickable
+              v-close-popup
+              :disable="clearingChat"
+              @click="confirmClearChat"
+            >
+              <q-item-section class="text-negative">Clear chat</q-item-section>
             </q-item>
           </q-list>
         </q-menu>
@@ -53,11 +62,23 @@
           <template #prepend>
             <q-icon name="search" />
           </template>
+          <template v-if="threadSearch" #append>
+            <q-btn
+              round
+              dense
+              flat
+              icon="close"
+              class="chat-search-clear-btn"
+              tabindex="-1"
+              aria-label="Clear search"
+              @click.stop="clearLocalSearchKeepBarOpen"
+            />
+          </template>
         </q-input>
       </div>
     </q-slide-transition>
 
-    <div v-if="recentChats.length" class="recent-chats">
+    <div v-if="recentChats.length && !assistantMode" class="recent-chats">
       <div class="recent-chats-label">
         Recent chats
       </div>
@@ -94,10 +115,24 @@
           </div>
           <div class="chat-bubble-time">{{ formatMsgTime(m.createdAt) }}</div>
         </div>
+        <div
+          v-if="isAssistantTyping"
+          class="chat-bubble-row chat-bubble-row--in chat-bubble-row--typing"
+          aria-hidden="true"
+        >
+          <div class="chat-bubble chat-bubble--in chat-bubble--typing">
+            <span class="typing-dot" />
+            <span class="typing-dot" />
+            <span class="typing-dot" />
+          </div>
+        </div>
         <div v-if="!visibleMessages.length && !loading" class="chat-empty">
           {{ emptyLabel }}
         </div>
-        <div v-if="loading" class="chat-loading">
+        <div
+          v-if="loading && !(assistantMode && messages.length === 0)"
+          class="chat-loading"
+        >
           <q-spinner color="primary" size="28px" />
         </div>
       </div>
@@ -105,6 +140,7 @@
 
     <div class="chat-input-dock">
       <q-btn
+        v-if="!assistantMode"
         round
         flat
         icon="accessibility_new"
@@ -118,6 +154,7 @@
         <q-input
           v-model="draft"
           class="chat-field"
+          :class="{ 'chat-field--spire': assistantMode }"
           rounded
           standout
           dense
@@ -147,9 +184,17 @@ import { useQuasar } from 'quasar'
 import { useAuthStore } from 'src/stores/authStore'
 import { useAccessibilityStore } from 'src/stores/accessibilityStore'
 import { getUserProfile } from 'src/services/userService'
-import { listUserConversations, sendMessage, subscribeChatHistory } from 'src/services/messageService'
+import {
+  listUserConversations,
+  sendMessage,
+  subscribeChatHistory,
+  deleteAllMessagesInThread,
+} from 'src/services/messageService'
 import { getSpiraReply } from 'src/services/spiraReply'
+import { HELP_ASSISTANT_WELCOME } from 'src/data/helpAssistantKnowledge'
 import { ASSISTANT_PEER_ID, assistantConversationDefaults } from 'src/constants/messaging'
+
+const ASSISTANT_WELCOME_ID = '__spire_welcome__'
 
 const route = useRoute()
 const router = useRouter()
@@ -169,7 +214,16 @@ const listPath = computed(() => (isEmployer.value ? '/employer/messages' : '/mes
 
 const assistantMode = computed(() => peerId.value === ASSISTANT_PEER_ID)
 
+/** Role-aware knowledge base (prefer store; fall back to employer layout path). */
+const userRole = computed(() => {
+  if (authStore.userRole === 'employer' || isEmployer.value) return 'employer'
+  return 'jobseeker'
+})
+
 const currentUid = computed(() => authStore.user?.uid || '')
+
+const isAssistantTyping = ref(false)
+const clearingChat = ref(false)
 
 const messages = ref([])
 const loading = ref(true)
@@ -255,18 +309,42 @@ function formatMsgTime(ts) {
   return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
+/** Virtual welcome bubble when there is no persisted welcome yet */
+const chatMessagesForView = computed(() => {
+  if (!assistantMode.value) return messages.value
+  const raw = messages.value
+  const first = raw[0]
+  const alreadyWelcome =
+    first?.message === HELP_ASSISTANT_WELCOME ||
+    (first?.senderId === ASSISTANT_PEER_ID &&
+      String(first?.message || '').startsWith('Hi there!'))
+  if (alreadyWelcome) return raw
+  return [
+    {
+      id: ASSISTANT_WELCOME_ID,
+      senderId: ASSISTANT_PEER_ID,
+      message: HELP_ASSISTANT_WELCOME,
+      createdAt: null,
+    },
+    ...raw,
+  ]
+})
+
 const visibleMessages = computed(() => {
+  const base = chatMessagesForView.value
   const q = threadSearch.value.trim().toLowerCase()
-  if (!q) return messages.value
-  return messages.value.filter((m) => (m.message || '').toLowerCase().includes(q))
+  if (!q) return base
+  return base.filter((m) => (m.message || '').toLowerCase().includes(q))
 })
 
 const emptyLabel = computed(() => {
-  if (assistantMode.value) return 'Ask Spira anything about your job search.'
+  if (assistantMode.value) return 'Messages will appear here.'
   return 'No messages yet. Say hello!'
 })
 
-const canSend = computed(() => !!draft.value.trim() && !sending.value && !!currentUid.value)
+const canSend = computed(
+  () => !!draft.value.trim() && !sending.value && !isAssistantTyping.value && !!currentUid.value
+)
 
 function goBack() {
   router.push(listPath.value)
@@ -307,8 +385,58 @@ function goToPeerProfile() {
 }
 
 function clearLocalSearch() {
+  /* Defer so v-close-popup finishes closing the menu before we mutate (fixes missed updates in some Quasar builds). */
+  window.setTimeout(() => {
+    threadSearch.value = ''
+    showSearch.value = false
+  }, 0)
+}
+
+/** Clear query only; keep search bar open (toolbar “Clear search” closes the bar). */
+function clearLocalSearchKeepBarOpen() {
   threadSearch.value = ''
-  showSearch.value = false
+}
+
+function confirmClearChat() {
+  window.setTimeout(() => {
+    $q.dialog({
+      title: 'Clear chat?',
+      message:
+        'All messages in this conversation will be permanently deleted for you and the other person.',
+      cancel: true,
+      persistent: true,
+      ok: {
+        label: 'Clear',
+        color: 'negative',
+        unelevated: true,
+      },
+    }).onOk(() => {
+      void clearChatThread()
+    })
+  }, 0)
+}
+
+async function clearChatThread() {
+  const uid = currentUid.value
+  const other = peerId.value
+  if (!uid || !other) return
+  clearingChat.value = true
+  try {
+    await deleteAllMessagesInThread(uid, other)
+    threadSearch.value = ''
+    showSearch.value = false
+    await loadRecentChats()
+    $q.notify({ type: 'positive', message: 'Chat cleared', position: 'top' })
+  } catch (e) {
+    console.error(e)
+    $q.notify({
+      type: 'negative',
+      message: 'Could not clear chat. Check your connection and try again.',
+      position: 'top',
+    })
+  } finally {
+    clearingChat.value = false
+  }
 }
 
 function onAccessibility() {
@@ -342,17 +470,23 @@ async function send() {
         receiverId: ASSISTANT_PEER_ID,
         message: text,
       })
-      await new Promise((r) => setTimeout(r, 400))
+      isAssistantTyping.value = true
+      scrollToBottom()
+      const delayMs = 520 + Math.floor(Math.random() * 780)
+      await new Promise((r) => setTimeout(r, delayMs))
+      const reply = getSpiraReply(text, { role: userRole.value })
+      isAssistantTyping.value = false
       await sendMessage({
         senderId: ASSISTANT_PEER_ID,
         receiverId: currentUid.value,
-        message: getSpiraReply(text),
+        message: reply,
       })
       loadRecentChats()
     } catch (e) {
       console.error(e)
       $q.notify({ type: 'negative', message: 'Could not send message' })
     } finally {
+      isAssistantTyping.value = false
       sending.value = false
     }
     return
@@ -433,6 +567,10 @@ watch(
   () => messages.value.length,
   () => scrollToBottom()
 )
+
+watch(isAssistantTyping, (on) => {
+  if (on) scrollToBottom()
+})
 </script>
 
 <style scoped>
@@ -521,6 +659,10 @@ watch(
 .chat-search-input :deep(.q-field__control) {
   background: #f0f0f0 !important;
   border-radius: 14px !important;
+}
+
+.chat-search-clear-btn {
+  color: #888;
 }
 
 .recent-chats {
@@ -706,5 +848,53 @@ watch(
 
 .chat-input-send:disabled {
   opacity: 0.4;
+}
+
+.chat-field--spire :deep(.q-field__native),
+.chat-field--spire :deep(input),
+.chat-field--spire :deep(textarea) {
+  color: #4b1d4f !important;
+  caret-color: #4b1d4f;
+}
+
+.chat-bubble--typing {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 40px;
+  padding: 12px 16px !important;
+}
+
+.chat-bubble-row--typing {
+  margin-bottom: 4px;
+}
+
+.typing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6b4d7a;
+  animation: spire-typing-bounce 1.15s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+@keyframes spire-typing-bounce {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-5px);
+  }
 }
 </style>

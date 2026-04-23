@@ -139,6 +139,7 @@ import { computed, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'src/stores/authStore'
+import { firebaseErrorMessage } from 'src/utils/firebaseErrorMessages'
 import logoSrc from 'src/assets/logo.png'
 
 const router = useRouter()
@@ -172,6 +173,11 @@ async function onSubmit() {
     router.push('/home')
   } catch (error) {
     console.error('Login failed:', error)
+    $q.notify({
+      type: 'negative',
+      message: firebaseErrorMessage(error),
+      position: 'top',
+    })
   } finally {
     loading.value = false
   }

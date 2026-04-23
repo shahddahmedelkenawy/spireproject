@@ -11,7 +11,7 @@ import {
   doc,
 } from 'firebase/firestore'
 import { getJobById, listCompanyJobs } from './jobService'
-import { getCompany, getCompanyByOwner } from './companyService'
+import { getCompany, listCompaniesByOwner } from './companyService'
 import { getUserProfile } from './userService'
 import { addNotification } from './notificationService'
 import { getMedicalProfileByUser } from './iqTestService'
@@ -67,9 +67,13 @@ export async function createApplication(payload) {
     return existingSnap.docs[0].id
   }
 
+  const job = await getJobById(payload.jobId)
+  const companyId = job?.companyId || null
+
   const ref = await addDoc(collection(db, 'applications'), {
     jobId: payload.jobId,
     jobSeekerId: payload.jobSeekerId,
+    ...(companyId ? { companyId } : {}),
     status: payload.status || 'pending',
     answers: payload.answers || {},
     createdAt: serverTimestamp(),
@@ -77,7 +81,6 @@ export async function createApplication(payload) {
   await updateDoc(doc(db, 'applications', ref.id), { id: ref.id })
 
   try {
-    const job = await getJobById(payload.jobId)
     const jobLabel = job?.title || job?.name || 'this role'
 
     try {
@@ -95,9 +98,9 @@ export async function createApplication(payload) {
       console.warn('Could not notify job seeker of application:', e)
     }
 
-    if (job?.companyId) {
+    if (companyId) {
       try {
-        const company = await getCompany(job.companyId)
+        const company = await getCompany(companyId)
         if (company?.ownerId) {
           const seeker = await getUserProfile(payload.jobSeekerId)
           await addNotification({
@@ -129,6 +132,22 @@ export async function updateApplicationStatus(applicationId, status, triggeredBy
   const appRef = doc(db, 'applications', applicationId)
   const snap = await getDoc(appRef)
   const prev = snap.exists() ? snap.data() : null
+
+  /*
+   * Backfill companyId in its own write so Firestore rules can authorize employers via
+   * employerOwnsApplicationByCompanyId() before status-only updates.
+   */
+  if (prev && !prev.companyId && prev.jobId) {
+    try {
+      const job = await getJobById(prev.jobId)
+      if (job?.companyId) {
+        await updateDoc(appRef, { companyId: job.companyId })
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
   await updateDoc(appRef, { status })
 
   if (prev?.jobSeekerId && triggeredBy) {
@@ -198,10 +217,14 @@ export async function getApplicationsForJobSeeker(jobSeekerId) {
 }
 
 export async function getApplicationsForEmployer(ownerId) {
-  const company = await getCompanyByOwner(ownerId)
-  if (!company?.id) return []
+  const companies = await listCompaniesByOwner(ownerId)
+  if (!companies.length) return []
 
-  const companyJobs = await listCompanyJobs(company.id)
+  const companyJobs = []
+  for (const c of companies) {
+    const jobs = await listCompanyJobs(c.id)
+    companyJobs.push(...jobs)
+  }
   if (!companyJobs.length) return []
 
   const pairs = []
