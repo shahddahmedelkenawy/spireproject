@@ -1,0 +1,13 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    /**
+     * Permissive: any authenticated user can read/write any object.
+     * No path or file-type checks (upload MIME types are not restricted here).
+     * Tighten for production (per-user paths, size limits, contentType if needed).
+     */
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

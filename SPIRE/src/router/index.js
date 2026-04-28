@@ -33,5 +33,10 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   })
 
+  Router.afterEach((to) => {
+    const title = typeof to.meta?.title === 'string' ? to.meta.title : 'SPIRE'
+    document.title = `${title} | SPIRE`
+  })
+
   return Router
 })
