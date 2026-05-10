@@ -1,112 +1,76 @@
 <template>
-  <q-layout class="landing-layout" view="hHh lpR fFf">
+  <q-page class="landing-page">
+    <main class="hero">
+      <div class="hero__illustration">
+        <img :src="heroIllustration" alt="" class="hero__illustration-img" loading="eager">
+      </div>
 
-    <!-- HEADER -->
-    <q-header class="landing-header">
-      <q-toolbar class="landing-toolbar">
-        <div class="landing-toolbar__logo">
-          <img :src="logoImage" alt="SPIRE" class="landing-logo__img" />
+      <div class="hero__content">
+        <div class="hero__headline-wrap">
+          <img :src="headlineImage" alt="SEE ABILITY NOT DISABILITY" class="hero__headline-img" loading="eager">
         </div>
 
-        <nav class="landing-nav" aria-label="Main navigation">
-          <a href="#" class="landing-nav__link">Our Featured Companies</a>
-          <a href="#" class="landing-nav__link">Our Featured Jobs</a>
-          <a href="#" class="landing-nav__link">About Us</a>
-          <a href="#" class="landing-nav__link">Contact Us</a>
-        </nav>
-
-        <div class="landing-actions">
+        <div class="hero__cta">
           <q-btn
             no-caps
             unelevated
-            class="landing-btn landing-btn--outline"
-            label="Sign up"
-            @click="goSignUp"
+            class="hero__cta-btn"
+            label="Join as a Job Seeker →"
+            @click="goSignUpAs('seeker')"
           />
           <q-btn
             no-caps
             unelevated
-            class="landing-btn landing-btn--filled"
-            label="Login"
-            @click="goLogin"
+            class="hero__cta-btn"
+            label="Join as an Employer →"
+            @click="goSignUpAs('employer')"
           />
         </div>
-      </q-toolbar>
-    </q-header>
+      </div>
+    </main>
 
-    <!-- PAGE -->
-    <q-page-container class="landing-page-container">
-
-      <!-- HERO SECTION -->
-      <main class="hero">
-        <div class="hero__illustration">
-          <img :src="heroIllustration" alt="Woman holding phone" class="hero__illustration-img" />
-        </div>
-
-        <div class="hero__content">
-          <div class="hero__headline-wrap">
-            <img :src="headlineImage" alt="SEE ABILITY NOT DISABILITY" class="hero__headline-img" />
+    <section class="stats-section" aria-labelledby="spire-stats-heading">
+      <h2 id="spire-stats-heading" class="sr-only">
+        SPIRE at a glance
+      </h2>
+      <div class="stats-container">
+        <div class="stat-card">
+          <div class="stat-number">
+            3 +
           </div>
-
-          <div class="hero__cta">
-            <q-btn
-              no-caps
-              unelevated
-              class="hero__cta-btn"
-              label="Join as a Job Seeker →"
-              @click="goSignUpAs('seeker')"
-            />
-            <q-btn
-              no-caps
-              unelevated
-              class="hero__cta-btn"
-              label="Join as an Employer →"
-              @click="goSignUpAs('employer')"
-            />
+          <div class="stat-label">
+            Years
           </div>
         </div>
-      </main>
 
-      <!-- STATS SECTION -->
-      <section class="stats-section">
-        <div class="stats-container">
-          <div class="stat-card">
-            <div class="stat-number">3 +</div>
-            <div class="stat-label">Years</div>
+        <div class="stat-card">
+          <div class="stat-number">
+            50,000+
           </div>
-
-          <div class="stat-card">
-            <div class="stat-number">50,000+</div>
-            <div class="stat-label">Users</div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-number">10,000+</div>
-            <div class="stat-label">Companies</div>
+          <div class="stat-label">
+            Users
           </div>
         </div>
-      </section>
 
-    </q-page-container>
-
-  </q-layout>
+        <div class="stat-card">
+          <div class="stat-number">
+            10,000+
+          </div>
+          <div class="stat-label">
+            Companies
+          </div>
+        </div>
+      </div>
+    </section>
+  </q-page>
 </template>
 
 <script setup>
-import logoImage from 'src/assets/logo.png'
 import heroIllustration from 'src/assets/Group.png'
 import headlineImage from 'src/assets/see ability.png'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-
-function goSignUp() {
-  router.push('/signup')
-}
-
-function goLogin() {
-  router.push('/login')
-}
 
 function goSignUpAs(role) {
   router.push({ path: '/signup', query: { role } })
@@ -116,101 +80,22 @@ function goSignUpAs(role) {
 <style scoped>
 @import url('https://fonts.googleapis.com/css?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
 
-.landing-layout {
-  min-height: 100vh;
+.landing-page {
   background: #ffffff;
   overflow-x: hidden;
 }
 
-.landing-header {
-  position: relative !important;
-  background: #ffffff;
-  box-shadow: none;
-  border-bottom: none;
-}
-
-.landing-toolbar {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 28px 48px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 72px;
-  gap: 24px;
-}
-
-.landing-toolbar__logo {
-  flex-shrink: 0;
-}
-
-.landing-logo__img {
-  display: block;
-  height: 32px;
-  width: auto;
-  max-width: 120px;
-  object-fit: contain;
-  object-position: left center;
-}
-
-.landing-nav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 40px;
-  flex: 1;
-  margin: 0 24px;
-}
-
-.landing-nav__link {
-  font-size: 15px;
-  font-weight: 700;
-  color: #2a2a2a;
-  text-decoration: none;
-  position: relative;
-  white-space: nowrap;
-}
-
-.landing-nav__link:hover {
-  color: #4b1f4f;
-}
-
-.landing-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-}
-
-.landing-btn {
-  min-width: 96px;
-  height: 42px;
-  padding: 0 24px;
-  border-radius: 21px;
-}
-
-.landing-btn--outline,
-.landing-btn--filled {
-  background: #4b1f4f !important;
-  color: #ffffff;
-  border: 1.5px solid #4b1f4f;
-}
-
-.landing-page-container {
-  padding: 0;
-}
-
-/* HERO */
 .hero {
-  max-width: 1440px;
+  width: 100%;
+  max-width: min(1200px, 100%);
   margin: 0 auto;
-  padding: 16px 48px 24px;
+  padding: 16px var(--spire-layout-gutter) 24px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 56px;
-  min-height: 100vh; 
-  box-sizing: border-box;
+  min-height: calc(100dvh - var(--jsk-nav-height, 70px));
 }
 
 .hero__illustration {
@@ -218,7 +103,7 @@ function goSignUpAs(role) {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  padding-left: 68px;
+  padding-left: clamp(0px, 4vw, 68px);
 }
 
 .hero__illustration-img {
@@ -226,7 +111,7 @@ function goSignUpAs(role) {
   max-height: 520px;
   width: auto;
   object-fit: contain;
-  margin-top: -72px;
+  margin-top: clamp(-48px, -6vw, -72px);
 }
 
 .hero__content {
@@ -239,7 +124,7 @@ function goSignUpAs(role) {
 
 .hero__headline-wrap {
   max-width: 620px;
-  margin-top: -40px;
+  margin-top: clamp(-24px, -4vw, -40px);
 }
 
 .hero__headline-img {
@@ -248,26 +133,30 @@ function goSignUpAs(role) {
 
 .hero__cta {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 20px;
   margin-top: 28px;
 }
 
 .hero__cta-btn {
-  min-width: 240px;
+  min-width: min(240px, 100%);
   height: 56px;
   border-radius: 28px;
   background: #4b1f4f !important;
   color: #ffffff;
 }
 
-/* STATS SECTION */
 .stats-section {
   background-color: #3b154f;
-  padding: 80px 60px;
-
+  padding: clamp(48px, 8vw, 80px) var(--spire-layout-gutter);
+  box-sizing: border-box;
 }
 
 .stats-container {
+  width: 100%;
+  max-width: min(1200px, 100%);
+  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   gap: 40px;
@@ -275,7 +164,7 @@ function goSignUpAs(role) {
 
 .stat-card {
   flex: 1;
-  height: 320px;
+  min-height: 220px;
   border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 24px;
   display: flex;
@@ -285,19 +174,20 @@ function goSignUpAs(role) {
 }
 
 .stat-number {
-  font-size: 48px;
+  font-size: clamp(32px, 5vw, 48px);
   color: rgba(255, 255, 255, 0.35);
 }
 
 .stat-label {
-  font-size: 28px;
+  font-size: clamp(20px, 3vw, 28px);
   color: rgba(255, 255, 255, 0.35);
 }
 
-/* RESPONSIVE */
 @media (max-width: 1024px) {
   .hero {
     flex-direction: column;
+    min-height: min-content;
+    padding-bottom: 48px;
   }
 
   .stats-container {

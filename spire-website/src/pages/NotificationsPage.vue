@@ -1,9 +1,6 @@
 <template>
   <q-page class="notifications-page">
     <div class="notifications-inner">
-      <JobSeekerStickyHeader v-if="!isEmployerNotifications" />
-      <EmployerStickyHeader v-else />
-
       <h1 class="page-title">Notifications</h1>
 
       <div class="filter-pills" role="tablist" aria-label="Filter notifications">
@@ -82,7 +79,7 @@
                 />
                 <q-btn
                   no-caps
-                  flat
+                  outline
                   class="reject-notif-btn"
                   label="Reject"
                   :disable="processingId === item.id"
@@ -134,7 +131,6 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNotificationStore } from 'src/stores/notificationStore'
 import { useAuthStore } from 'src/stores/authStore'
@@ -144,11 +140,6 @@ import {
   rejectFriendRequest,
   countAcceptedConnectionsForUser,
 } from 'src/services/userService'
-import JobSeekerStickyHeader from 'src/components/JobSeekerStickyHeader.vue'
-import EmployerStickyHeader from 'src/components/EmployerStickyHeader.vue'
-
-const route = useRoute()
-const isEmployerNotifications = computed(() => route.path.startsWith('/employer/'))
 
 const filterTabs = [
   { id: 'all', label: 'All' },
@@ -243,35 +234,44 @@ async function rejectFriend(item) {
 .notifications-page {
   background: #f0f0f2;
   min-height: 100%;
-  padding: 0 16px calc(88px + env(safe-area-inset-bottom));
-  padding-top: env(safe-area-inset-top);
+  width: 100%;
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top) 0 calc(88px + env(safe-area-inset-bottom));
 }
 
+/* Match ProfilePage `.jsp-inner`: same max width and horizontal padding as profile cards */
 .notifications-inner {
-  max-width: 480px;
+  width: 100%;
+  max-width: var(--spire-content-max);
   margin: 0 auto;
+  box-sizing: border-box;
+  padding: clamp(24px, 5vw, 44px) var(--spire-layout-gutter) 0;
 }
 
 .page-title {
-  font-size: 1.35rem;
+  font-size: clamp(1.2rem, 2.6vw, 1.35rem);
   font-weight: 700;
-  margin: 0 0 16px;
+  margin: 0 0 clamp(16px, 2.5vw, 22px);
   color: #1a1a1a;
+  line-height: 1.25;
+  text-align: left;
 }
 
 .filter-pills {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: clamp(18px, 2.5vw, 24px);
+  justify-content: flex-start;
 }
 
 .filter-pill {
-  flex: 1;
+  flex: 0 1 auto;
   border: none;
   cursor: pointer;
-  padding: 10px 14px;
+  padding: 7px 13px;
   border-radius: 999px;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   background: #e8e8ec;
   color: #333;
@@ -303,8 +303,8 @@ async function rejectFriend(item) {
   margin: 0;
   font-size: 0.9rem;
   text-align: center;
-  line-height: 1.5;
-  max-width: 280px;
+  line-height: 1.55;
+  max-width: min(42ch, 100%);
 }
 
 .notif-list-wrap {
@@ -312,6 +312,10 @@ async function rejectFriend(item) {
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .notif-row {
@@ -435,22 +439,48 @@ async function rejectFriend(item) {
 
 .notif-actions {
   display: flex;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 10px;
   margin-top: 10px;
+  width: 100%;
+  align-items: stretch;
 }
 
+.notif-actions :deep(.q-btn) {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Match JobCard homepage `.apply-btn` sizing */
 .accept-notif-btn {
   border-radius: 999px;
-  background-color: #4b1e5a !important;
+  background-color: #3d0b52 !important;
   color: #ffffff !important;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
-  padding: 0 16px;
+  min-height: 42px;
+  padding: 0 22px;
+  box-shadow: 0 4px 14px rgba(61, 11, 82, 0.35);
 }
 
 .reject-notif-btn {
   border-radius: 999px;
-  color: #666666;
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 42px;
+  padding: 0 22px;
+  color: #3d0b52 !important;
+  border-color: rgba(61, 11, 82, 0.45) !important;
+}
+
+@media (max-width: 360px) {
+  .notif-actions {
+    flex-wrap: wrap;
+  }
+
+  .notif-actions :deep(.q-btn) {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
 }
 </style>

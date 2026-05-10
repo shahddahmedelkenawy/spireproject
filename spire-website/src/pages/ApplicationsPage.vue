@@ -1,7 +1,6 @@
 <template>
   <q-page class="applications-page">
     <div class="applications-inner">
-      <JobSeekerStickyHeader />
 
       <section class="page-head">
         <h1 class="page-title">My applications</h1>
@@ -52,7 +51,6 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
-import JobSeekerStickyHeader from 'src/components/JobSeekerStickyHeader.vue'
 import { useAuthStore } from 'src/stores/authStore'
 import { getApplicationsForJobSeeker } from 'src/services/applicationService'
 

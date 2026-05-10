@@ -1,7 +1,26 @@
 <template>
-  <q-page class="chat-page column no-wrap">
-    <header class="chat-top">
-      <q-btn flat round dense icon="arrow_back" class="chat-top-icon" aria-label="Back" @click="goBack" />
+  <component
+    :is="panelOnly ? 'div' : 'q-page'"
+    class="chat-route-page column no-wrap"
+    :class="{ 'chat-route-page--panel': panelOnly }"
+  >
+    <div class="chat-route-root">
+      <div class="chat-route-root__pane">
+        <div
+          class="chat-page column no-wrap"
+          :class="{ 'chat-page--split': jobSeekerCompactPane }"
+        >
+          <header class="chat-top" :class="{ 'chat-top--spire': assistantMode }">
+            <q-btn
+              v-if="showChatBack"
+              flat
+              round
+              dense
+              icon="arrow_back"
+              class="chat-top-icon"
+              aria-label="Back"
+              @click="goBack"
+            />
       <button
         type="button"
         class="chat-top-peer"
@@ -9,13 +28,31 @@
         aria-label="View profile"
         @click="goToPeerProfile"
       >
-        <q-avatar size="40px" class="chat-top-avatar">
+        <q-avatar
+          size="40px"
+          class="chat-top-avatar"
+          :class="{ 'chat-top-avatar--spire': assistantMode }"
+        >
           <img v-if="headerPhoto" :src="headerPhoto" alt="">
+          <q-icon
+            v-else-if="assistantMode"
+            name="smart_toy"
+            size="22px"
+            class="chat-top-spira-ic"
+          />
           <span v-else>{{ headerInitials }}</span>
         </q-avatar>
         <div class="chat-top-name-block">
-          <div class="chat-top-name">{{ headerName }}</div>
-          <div v-if="headerSubtitle" class="chat-top-sub">{{ headerSubtitle }}</div>
+          <div class="chat-top-name" :class="{ 'chat-top-name--spire': assistantMode }">
+            {{ headerName }}
+          </div>
+          <div
+            v-if="headerSubtitle"
+            class="chat-top-sub"
+            :class="{ 'chat-top-sub--spire': assistantMode }"
+          >
+            {{ headerSubtitle }}
+          </div>
         </div>
       </button>
       <q-space />
@@ -101,20 +138,30 @@
 
     <div ref="scrollAreaRef" class="chat-messages-wrap">
       <div class="chat-messages">
-        <div
-          v-for="m in visibleMessages"
-          :key="m.id"
-          class="chat-bubble-row"
-          :class="m.senderId === currentUid ? 'chat-bubble-row--out' : 'chat-bubble-row--in'"
-        >
-          <div
-            class="chat-bubble"
-            :class="m.senderId === currentUid ? 'chat-bubble--out' : 'chat-bubble--in'"
-          >
-            {{ m.message }}
+        <template v-for="row in timelineRows" :key="row.key">
+          <div v-if="row.type === 'sep'" class="chat-day-separator" role="presentation">
+            <span class="chat-day-separator__line" aria-hidden="true" />
+            <span class="chat-day-separator__text">{{ row.label }}</span>
+            <span class="chat-day-separator__line" aria-hidden="true" />
           </div>
-          <div class="chat-bubble-time">{{ formatMsgTime(m.createdAt) }}</div>
-        </div>
+          <div
+            v-else
+            class="chat-bubble-row"
+            :class="
+              row.message.senderId === currentUid ? 'chat-bubble-row--out' : 'chat-bubble-row--in'
+            "
+          >
+            <div
+              class="chat-bubble"
+              :class="
+                row.message.senderId === currentUid ? 'chat-bubble--out' : 'chat-bubble--in'
+              "
+            >
+              {{ row.message.message }}
+            </div>
+            <div class="chat-bubble-time">{{ formatMsgTime(row.message.createdAt) }}</div>
+          </div>
+        </template>
         <div
           v-if="isAssistantTyping"
           class="chat-bubble-row chat-bubble-row--in chat-bubble-row--typing"
@@ -138,43 +185,60 @@
       </div>
     </div>
 
-    <div class="chat-input-dock">
-      <q-btn
-        v-if="!assistantMode"
-        round
-        flat
-        icon="accessibility_new"
-        class="chat-a11y-fab"
-        aria-label="Accessibility"
-        @click="onAccessibility"
-      />
-
-      <div class="chat-input-row">
-        <q-btn flat round dense icon="emoji_emotions" class="chat-input-side" @click="onEmoji" />
-        <q-input
-          v-model="draft"
-          class="chat-field"
-          :class="{ 'chat-field--spire': assistantMode }"
-          rounded
-          standout
-          dense
-          :placeholder="inputPlaceholder"
-          @keyup.enter="send"
-        />
-        <q-btn
-          flat
-          round
-          dense
-          icon="send"
-          class="chat-input-side chat-input-send"
-          :disable="!canSend"
-          @click="send"
-        />
-        <q-btn flat round dense icon="mic" class="chat-input-side" @click="onMic" />
-        <q-btn flat round dense icon="thumb_up_alt" class="chat-input-side" @click="onThumb" />
+          <div class="chat-input-dock">
+            <div class="chat-input-row">
+              <q-btn flat round dense icon="emoji_emotions" class="chat-input-side" @click="onEmoji" />
+              <q-input
+                v-model="draft"
+                class="chat-field"
+                :class="{ 'chat-field--brand-purple': !isEmployer }"
+                rounded
+                standout
+                dense
+                :placeholder="inputPlaceholder"
+                @keyup.enter="send"
+              >
+                <template #prepend>
+                  <q-btn
+                    round
+                    dense
+                    unelevated
+                    icon="add"
+                    class="chat-input-attach-btn chat-input-infield"
+                    aria-label="Attach file"
+                    @click="onAttach"
+                  />
+                </template>
+                <template #append>
+                  <q-btn
+                    flat
+                    round
+                    dense
+                    icon="send"
+                    class="chat-input-send chat-input-infield"
+                    :disable="!canSend"
+                    aria-label="Send message"
+                    @click="send"
+                  />
+                </template>
+              </q-input>
+              <q-btn flat round dense icon="mic" class="chat-input-side" aria-label="Voice input" @click="onMic" />
+              <q-btn flat round dense icon="thumb_up_alt" class="chat-input-side" aria-label="Reaction" @click="onThumb" />
+              <q-btn
+                v-if="!assistantMode"
+                round
+                unelevated
+                icon="accessibility_new"
+                class="chat-a11y-btn"
+                aria-label="Accessibility"
+                @click="onAccessibility"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </q-page>
+  </component>
 </template>
 
 <script setup>
@@ -192,9 +256,22 @@ import {
 } from 'src/services/messageService'
 import { getSpiraReply } from 'src/services/spiraReply'
 import { HELP_ASSISTANT_WELCOME } from 'src/data/helpAssistantKnowledge'
-import { ASSISTANT_PEER_ID, assistantConversationDefaults } from 'src/constants/messaging'
+import {
+  ASSISTANT_PEER_ID,
+  assistantConversationDefaults,
+  spireAssistantSeenMsgKey,
+} from 'src/constants/messaging'
 
 const ASSISTANT_WELCOME_ID = '__spire_welcome__'
+
+const props = defineProps({
+  /** When true, root is a div (embedded in Messages hub) instead of q-page. */
+  panelOnly: { type: Boolean, default: false },
+  /** Job seeker Messages hub: peer id without route navigation. */
+  peerIdOverride: { type: String, default: '' },
+})
+
+const emit = defineEmits(['hub-back', 'switch-peer'])
 
 const route = useRoute()
 const router = useRouter()
@@ -202,15 +279,26 @@ const $q = useQuasar()
 const authStore = useAuthStore()
 const accessibilityStore = useAccessibilityStore()
 
-const inputPlaceholder = 'Type your message here…'
+const inputPlaceholder = 'Type your message here...'
 
 const peerId = computed(() => {
+  if (props.peerIdOverride) return props.peerIdOverride
   const raw = route.params.peerId
   return raw ? decodeURIComponent(String(raw)) : ''
 })
 
 const isEmployer = computed(() => route.path.startsWith('/employer'))
 const listPath = computed(() => (isEmployer.value ? '/employer/messages' : '/messages'))
+
+/** Job seeker thread uses compact header padding when embedded in Messages hub (list is separate). */
+const jobSeekerCompactPane = computed(() => !isEmployer.value)
+
+/** Hub mobile stack: back; hub desktop split & route chat at md+: no back (aligned with MessagesPage ≥768 split). */
+const showChatBack = computed(() => {
+  if (isEmployer.value) return true
+  if (props.peerIdOverride) return ($q.screen.width || 0) < 768
+  return $q.screen.lt.md
+})
 
 const assistantMode = computed(() => peerId.value === ASSISTANT_PEER_ID)
 
@@ -303,10 +391,34 @@ async function loadPeerHeader() {
   }
 }
 
+function startOfDayMs(d) {
+  const x = new Date(d)
+  x.setHours(0, 0, 0, 0)
+  return x.getTime()
+}
+
+function dayKeyOfMessage(m) {
+  if (!m?.createdAt?.toDate) return startOfDayMs(new Date())
+  return startOfDayMs(m.createdAt.toDate())
+}
+
+function separatorLabelFromTimestamp(ts) {
+  const d = ts?.toDate ? ts.toDate() : new Date()
+  const now = new Date()
+  const today0 = startOfDayMs(now)
+  const msg0 = startOfDayMs(d)
+  const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  if (msg0 === today0) return `Today | ${timeStr}`
+  const yesterday0 = today0 - 86400000
+  if (msg0 === yesterday0) return `Yesterday | ${timeStr}`
+  const datePart = d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })
+  return `${datePart} | ${timeStr}`
+}
+
 function formatMsgTime(ts) {
   if (!ts?.toDate) return ''
   const d = ts.toDate()
-  return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
 /** Virtual welcome bubble when there is no persisted welcome yet */
@@ -337,6 +449,26 @@ const visibleMessages = computed(() => {
   return base.filter((m) => (m.message || '').toLowerCase().includes(q))
 })
 
+/** Day separators + messages (reference: centered “Today | 06:32 PM” style). */
+const timelineRows = computed(() => {
+  const list = visibleMessages.value
+  const rows = []
+  let prevDayKey = null
+  for (const m of list) {
+    const dk = dayKeyOfMessage(m)
+    if (prevDayKey === null || dk !== prevDayKey) {
+      prevDayKey = dk
+      rows.push({
+        type: 'sep',
+        key: `sep-${m.id}-${dk}`,
+        label: separatorLabelFromTimestamp(m.createdAt),
+      })
+    }
+    rows.push({ type: 'msg', key: `m-${m.id}`, message: m })
+  }
+  return rows
+})
+
 const emptyLabel = computed(() => {
   if (assistantMode.value) return 'Messages will appear here.'
   return 'No messages yet. Say hello!'
@@ -347,6 +479,10 @@ const canSend = computed(
 )
 
 function goBack() {
+  if (props.peerIdOverride) {
+    emit('hub-back')
+    return
+  }
   const from = route.query.from
   if (typeof from === 'string' && from.startsWith('/') && !from.startsWith('//')) {
     router.push(from)
@@ -379,6 +515,10 @@ async function loadRecentChats() {
 
 function openRecentChat(id) {
   if (!id || id === peerId.value) return
+  if (props.peerIdOverride) {
+    emit('switch-peer', id)
+    return
+  }
   router.push(chatPathFor(id))
 }
 
@@ -463,6 +603,10 @@ function onMic() {
 
 function onThumb() {
   $q.notify({ message: 'Reactions coming soon', position: 'bottom' })
+}
+
+function onAttach() {
+  $q.notify({ message: 'Attachments coming soon', position: 'bottom' })
 }
 
 async function send() {
@@ -580,29 +724,83 @@ watch(
 watch(isAssistantTyping, (on) => {
   if (on) scrollToBottom()
 })
+
+/** Keep list unread dot in sync while Spira chat is open (incl. mobile full-screen). */
+function persistSpireSeenFromThread(list) {
+  if (!assistantMode.value || !currentUid.value) return
+  for (let i = list.length - 1; i >= 0; i--) {
+    const m = list[i]
+    if (m.senderId === ASSISTANT_PEER_ID && m.id) {
+      localStorage.setItem(spireAssistantSeenMsgKey(currentUid.value), m.id)
+      return
+    }
+  }
+}
+
+watch(
+  () => messages.value,
+  (list) => persistSpireSeenFromThread(list),
+  { deep: true }
+)
 </script>
 
 <style scoped>
+.chat-route-page {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+}
+
+.chat-route-page--panel {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chat-route-root {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.chat-route-root__pane {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
 .chat-page {
   flex: 1 1 auto;
   min-height: 100%;
-  background: #f5f5f5;
+  min-width: 0;
+  background: #f4f2f7;
   padding-top: env(safe-area-inset-top);
-}
-
-.chat-page :deep(.q-page__container) {
-  min-height: inherit;
   display: flex;
   flex-direction: column;
+}
+
+.chat-page--split {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-top: 0;
+  background: #ffffff;
+  overflow: hidden;
 }
 
 .chat-top {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 8px 8px 4px;
-  background: #fff;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  gap: 10px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(61, 10, 69, 0.08);
+  box-shadow: 0 2px 14px rgba(28, 8, 36, 0.06);
   flex-shrink: 0;
 }
 
@@ -631,7 +829,7 @@ watch(isAssistantTyping, (on) => {
 }
 
 .chat-top-icon {
-  color: #4b1d4f;
+  color: #8b8794 !important;
 }
 
 .chat-top-avatar {
@@ -659,6 +857,34 @@ watch(isAssistantTyping, (on) => {
   color: #888;
 }
 
+/** Spira: crisp white bar, dark purple titles, richer purple robot avatar */
+.chat-top--spire {
+  background: #ffffff;
+  border-bottom: 1px solid rgba(61, 10, 69, 0.07);
+  box-shadow: 0 1px 10px rgba(28, 8, 36, 0.05);
+}
+
+.chat-top-avatar--spire {
+  background: linear-gradient(160deg, #f3e5f5 0%, #e1bee7 45%, #ce93d8 100%);
+  color: #6a1b9a;
+  border: 1px solid rgba(106, 27, 154, 0.35);
+  box-shadow: 0 2px 8px rgba(74, 20, 140, 0.12);
+}
+
+.chat-top-spira-ic {
+  color: #7b1fa2;
+}
+
+.chat-top-name--spire {
+  color: #3d0b52;
+  font-weight: 700;
+}
+
+.chat-top-sub--spire {
+  color: #5e3570;
+  font-weight: 600;
+}
+
 .chat-search-bar {
   padding: 8px 12px;
   background: #fff;
@@ -672,6 +898,10 @@ watch(isAssistantTyping, (on) => {
 
 .chat-search-clear-btn {
   color: #888;
+}
+
+.chat-page--split .recent-chats {
+  display: none;
 }
 
 .recent-chats {
@@ -740,24 +970,30 @@ watch(isAssistantTyping, (on) => {
 
 .chat-messages-wrap {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 12px 12px 120px;
   -webkit-overflow-scrolling: touch;
+  background: #ffffff;
+}
+
+.chat-page--split .chat-messages-wrap {
+  padding: 20px 28px 16px;
 }
 
 .chat-messages {
-  max-width: 560px;
+  max-width: 720px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 12px;
 }
 
 .chat-bubble-row {
   display: flex;
   flex-direction: column;
-  max-width: 85%;
-  margin-bottom: 8px;
+  max-width: min(85%, 520px);
+  margin-bottom: 4px;
 }
 
 .chat-bubble-row--in {
@@ -771,24 +1007,47 @@ watch(isAssistantTyping, (on) => {
 }
 
 .chat-bubble {
-  padding: 10px 14px;
-  border-radius: 16px;
+  padding: 12px 16px;
+  border-radius: 18px;
   font-size: 15px;
-  line-height: 1.4;
+  line-height: 1.45;
   word-break: break-word;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 10px rgba(45, 10, 52, 0.07);
+}
+
+.chat-day-separator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 720px;
+  margin: 8px auto 16px;
+}
+
+.chat-day-separator__line {
+  flex: 1;
+  height: 1px;
+  background: rgba(61, 10, 69, 0.12);
+}
+
+.chat-day-separator__text {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #7a7382;
+  letter-spacing: 0.02em;
 }
 
 .chat-bubble--in {
-  background: #e6ddf0;
-  color: #1e1e1e;
-  border-bottom-left-radius: 6px;
+  background: #ede7f6;
+  color: #1f1526;
+  border-bottom-left-radius: 8px;
 }
 
 .chat-bubble--out {
   background: #4b1d4f;
   color: #fff;
-  border-bottom-right-radius: 6px;
+  border-bottom-right-radius: 8px;
 }
 
 .chat-bubble-time {
@@ -817,27 +1076,32 @@ watch(isAssistantTyping, (on) => {
   right: 0;
   bottom: 0;
   padding-bottom: env(safe-area-inset-bottom);
-  background: linear-gradient(to top, #f5f5f5 80%, transparent);
+  background: linear-gradient(to top, #f4f2f7 82%, transparent);
   z-index: 10;
 }
 
-.chat-a11y-fab {
-  position: absolute;
-  left: 16px;
-  bottom: calc(100% + 8px);
-  background: #4b1d4f !important;
-  color: #fff !important;
-  box-shadow: 0 4px 14px rgba(75, 29, 79, 0.35);
+.chat-page--split .chat-input-dock {
+  position: sticky;
+  bottom: 0;
+  left: auto;
+  right: auto;
+  width: 100%;
+  margin-top: auto;
+  background: #ffffff;
 }
 
 .chat-input-row {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 8px 12px 12px;
-  background: #fff;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+  gap: 8px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: #ffffff;
+  border-top: 1px solid rgba(61, 10, 69, 0.08);
+  box-shadow: 0 -6px 22px rgba(28, 8, 36, 0.06);
+}
+
+.chat-page--split .chat-input-row {
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
 }
 
 .chat-field {
@@ -846,24 +1110,63 @@ watch(isAssistantTyping, (on) => {
 }
 
 .chat-field :deep(.q-field__control) {
-  background: #f0f0f0 !important;
-  border-radius: 20px !important;
-  min-height: 44px;
+  background: #ffffff !important;
+  border-radius: 26px !important;
+  min-height: 48px;
+  padding-right: 6px;
+  border: 1px solid rgba(61, 10, 69, 0.14) !important;
+  box-shadow: 0 2px 12px rgba(28, 8, 36, 0.06);
+}
+
+.chat-page--split .chat-field :deep(.q-field__control) {
+  box-shadow: 0 1px 8px rgba(28, 8, 36, 0.05);
 }
 
 .chat-input-side {
-  color: #4b1d4f;
+  color: #5a1e64;
+}
+
+.chat-input-infield {
+  color: #6b5d78 !important;
+}
+
+.chat-input-attach-btn {
+  background: #4b1d4f !important;
+  color: #ffffff !important;
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+  margin: 0 2px;
+}
+
+.chat-a11y-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  min-height: 44px !important;
+  min-width: 44px !important;
+  background: #4b1d4f !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(61, 10, 69, 0.35);
 }
 
 .chat-input-send:disabled {
   opacity: 0.4;
 }
 
-.chat-field--spire :deep(.q-field__native),
-.chat-field--spire :deep(input),
-.chat-field--spire :deep(textarea) {
+/** Job seeker messages: purple typing (same as former Spira-only styling). */
+.chat-field--brand-purple :deep(.q-field__native),
+.chat-field--brand-purple :deep(input),
+.chat-field--brand-purple :deep(textarea) {
   color: #4b1d4f !important;
-  caret-color: #4b1d4f;
+  caret-color: #6a1b9a;
+  font-weight: 600;
+}
+
+.chat-field--brand-purple :deep(.q-field__native::placeholder),
+.chat-field--brand-purple :deep(input::placeholder) {
+  color: rgba(75, 29, 79, 0.45);
 }
 
 .chat-bubble--typing {
@@ -882,7 +1185,7 @@ watch(isAssistantTyping, (on) => {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #6b4d7a;
+  background: #5a1e64;
   animation: spire-typing-bounce 1.15s ease-in-out infinite;
 }
 

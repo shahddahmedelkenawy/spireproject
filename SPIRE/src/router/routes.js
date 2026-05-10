@@ -92,7 +92,7 @@ const routes = [
   },
   {
     path: '/jobseeker',
-    component: () => import('layouts/BlankLayout.vue'),
+    component: () => import('layouts/JobSeekerShellLayout.vue'),
     children: [
       { path: '', redirect: '/jobseeker/dashboard' },
       { path: 'dashboard', component: () => import('pages/HomePage.vue'), meta: { title: 'Dashboard' } },
@@ -100,8 +100,24 @@ const routes = [
       { path: 'iq-test', component: () => import('pages/IQTestIntroPage.vue') },
       { path: 'upgrade', component: () => import('pages/JobSeekerUpgradePage.vue') },
       { path: 'browse-jobs', component: () => import('pages/BrowseJobsPage.vue') },
-      { path: 'job/:id/apply', component: () => import('pages/JobApplyPage.vue') },
-      { path: 'job/:id', component: () => import('pages/JobDetailsPage.vue') },
+      {
+        path: 'job/:id/apply',
+        component: () => import('pages/JobApplyPage.vue'),
+        meta: {
+          title: 'Apply',
+          jobSeekerNavBack: true,
+          jobSeekerBackFallback: '/jobseeker/browse-jobs',
+        },
+      },
+      {
+        path: 'job/:id',
+        component: () => import('pages/JobDetailsPage.vue'),
+        meta: {
+          title: 'Job',
+          jobSeekerNavBack: true,
+          jobSeekerBackFallback: '/jobseeker/browse-jobs',
+        },
+      },
       { path: 'applications', redirect: '/home/applications' },
     ],
   },

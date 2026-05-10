@@ -2,7 +2,106 @@ const routes = [
   {
     path: '/',
     component: () => import('layouts/BlankLayout.vue'),
-    children: [{ path: '', component: () => import('pages/SplashPage.vue') }],
+    children: [
+      {
+        path: '',
+        component: () => import('pages/IndexPage.vue'),
+        meta: {
+          title: 'Home',
+          description:
+            'SPIRE is an accessible hiring platform connecting employers and job seekers with clarity, dignity, and modern workflows.',
+        },
+      },
+    ],
+  },
+  {
+    path: '/splash',
+    component: () => import('layouts/SplashOnlyLayout.vue'),
+    children: [{ path: '', component: () => import('pages/SplashPage.vue'), meta: { title: 'Welcome' } }],
+  },
+  {
+    path: '/jobs',
+    component: () => import('layouts/BlankLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/JobsPage.vue'),
+        meta: {
+          title: 'Jobs',
+          description: 'Browse open roles from employers hiring on SPIRE.',
+        },
+      },
+    ],
+  },
+  {
+    path: '/companies',
+    component: () => import('layouts/BlankLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/CompaniesPage.vue'),
+        meta: {
+          title: 'Companies',
+          description: 'Explore organizations hiring through SPIRE.',
+        },
+      },
+    ],
+  },
+  {
+    path: '/about',
+    component: () => import('layouts/BlankLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/AboutPage.vue'),
+        meta: {
+          title: 'About',
+          description: 'Learn about SPIRE’s mission to make hiring more accessible and candidate-centered.',
+        },
+      },
+    ],
+  },
+  {
+    path: '/contact',
+    component: () => import('layouts/BlankLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/ContactPage.vue'),
+        meta: {
+          title: 'Contact',
+          description: 'Contact the SPIRE team for support, partnerships, and accessibility questions.',
+        },
+      },
+    ],
+  },
+  {
+    path: '/legal/privacy',
+    component: () => import('layouts/BlankLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/LegalPrivacyPage.vue'),
+        meta: {
+          title: 'Privacy Policy',
+          description: 'SPIRE privacy policy: how we collect, use, and protect information.',
+        },
+      },
+    ],
+  },
+  {
+    path: '/legal/terms',
+    component: () => import('layouts/BlankLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/LegalTermsPage.vue'),
+        meta: {
+          title: 'Terms of Service',
+          description: 'SPIRE terms of service for using the hiring platform.',
+        },
+      },
+    ],
   },
   {
     path: '/onboarding',
@@ -46,11 +145,17 @@ const routes = [
     path: '/messages',
     component: () => import('layouts/MobileLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/MessagesPage.vue'), meta: { title: 'Messages' } },
+      {
+        path: '',
+        component: () => import('pages/MessagesPage.vue'),
+        meta: { title: 'Messages' },
+      },
       {
         path: 'chat/:peerId',
-        component: () => import('pages/ChatConversationPage.vue'),
-        meta: { hideFooter: true },
+        redirect: (to) => ({
+          path: '/messages',
+          query: { peer: to.params.peerId },
+        }),
       },
     ],
   },
@@ -92,7 +197,7 @@ const routes = [
   },
   {
     path: '/jobseeker',
-    component: () => import('layouts/BlankLayout.vue'),
+    component: () => import('layouts/JobSeekerShellLayout.vue'),
     children: [
       { path: '', redirect: '/jobseeker/dashboard' },
       { path: 'dashboard', component: () => import('pages/HomePage.vue'), meta: { title: 'Dashboard' } },
@@ -100,8 +205,26 @@ const routes = [
       { path: 'iq-test', component: () => import('pages/IQTestIntroPage.vue') },
       { path: 'upgrade', component: () => import('pages/JobSeekerUpgradePage.vue') },
       { path: 'browse-jobs', component: () => import('pages/BrowseJobsPage.vue') },
-      { path: 'job/:id/apply', component: () => import('pages/JobApplyPage.vue') },
-      { path: 'job/:id', component: () => import('pages/JobDetailsPage.vue') },
+      {
+        path: 'job/:id/apply',
+        component: () => import('pages/JobApplyPage.vue'),
+        meta: {
+          title: 'Apply',
+          jobSeekerNavBack: true,
+          jobSeekerBackFallback: '/jobseeker/browse-jobs',
+          /** Match SPIRE app: full-screen apply uses in-page sticky header only (no main nav bar). */
+          hideJobSeekerMainNav: true,
+        },
+      },
+      {
+        path: 'job/:id',
+        component: () => import('pages/JobDetailsPage.vue'),
+        meta: {
+          title: 'Job',
+          jobSeekerNavBack: true,
+          jobSeekerBackFallback: '/jobseeker/browse-jobs',
+        },
+      },
       { path: 'applications', redirect: '/home/applications' },
     ],
   },
@@ -136,7 +259,7 @@ const routes = [
   },
   {
     path: '/payment/checkout',
-    component: () => import('layouts/BlankLayout.vue'),
+    component: () => import('layouts/MinimalLayout.vue'),
     children: [{ path: '', component: () => import('pages/PaymentCheckoutPage.vue') }],
   },
   {

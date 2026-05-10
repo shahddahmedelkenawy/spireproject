@@ -2,7 +2,7 @@
   <q-page class="page">
     <div class="page-content">
       <h2 class="page-title">Companies</h2>
-      <p v-if="loading" class="page-sub">Loadingâ€¦</p>
+      <p v-if="loading" class="page-sub">Loading…</p>
       <p v-else-if="!companies.length" class="page-sub">No companies registered yet.</p>
       <q-card v-for="c in companies" :key="c.id" class="card">
         <div class="name">{{ c.name || 'Company' }}</div>
@@ -32,8 +32,15 @@ onMounted(async () => {
 
 <style scoped>
 .page {
-  padding: 20px;
-  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  padding: clamp(16px, 3vw, 28px) 0;
+  padding-bottom: max(32px, env(safe-area-inset-bottom));
+}
+
+.page-content {
+  width: 100%;
+  max-width: min(960px, 100%);
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .page-title {

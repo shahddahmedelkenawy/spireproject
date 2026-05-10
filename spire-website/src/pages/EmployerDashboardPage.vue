@@ -1,7 +1,6 @@
 <template>
   <q-page class="page">
     <div class="inner">
-      <EmployerStickyHeader />
       <section class="welcome-block">
         <div class="welcome-row">
           <q-avatar size="44px" class="welcome-avatar">
@@ -157,7 +156,6 @@ import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import EmployerApplicantCard from 'src/components/EmployerApplicantCard.vue'
-import EmployerStickyHeader from 'src/components/EmployerStickyHeader.vue'
 import { useAuthStore } from 'src/stores/authStore'
 import { useUserStore } from 'src/stores/userStore'
 import { getApplicationsForEmployer, updateApplicationStatus } from 'src/services/applicationService'
@@ -382,15 +380,17 @@ watch(
 
 <style scoped>
 .page {
-  background: #f6f6f7;
+  background: transparent;
   font-family: 'Inter', sans-serif;
-  padding-top: env(safe-area-inset-top);
+  padding-top: 0;
 }
 
 .inner {
-  max-width: 480px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0 16px calc(20px + env(safe-area-inset-bottom));
+  padding: 0 0 calc(24px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
 }
 
 .welcome-block {
@@ -419,10 +419,11 @@ watch(
 
 .welcome-line {
   margin: 0;
-  font-size: 18px;
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
   font-weight: 700;
-  color: #1e1e1e;
+  color: #0f0f0f;
   line-height: 1.3;
+  letter-spacing: -0.02em;
 }
 
 .search-section {
@@ -510,16 +511,27 @@ watch(
 
 .dashboard-cards {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-  margin-bottom: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
 }
 
 .dash-card {
   border-radius: 16px;
-  padding: 14px;
+  padding: 20px;
   background: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(61, 11, 82, 0.08);
+  box-shadow: var(--spire-shadow-card, 0 4px 20px rgba(15, 15, 30, 0.06));
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.dash-card:hover {
+  box-shadow: 0 12px 32px rgba(61, 11, 82, 0.12);
+  transform: translateY(-2px);
+  border-color: rgba(61, 11, 82, 0.14);
 }
 
 .dash-card--hiring {

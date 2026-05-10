@@ -3,11 +3,11 @@
     <div class="page-content">
       <h2 class="page-title">Jobs</h2>
       <q-input v-model="search" rounded outlined placeholder="Search jobs" class="search" />
-      <p v-if="loading" class="page-sub">Loadingâ€¦</p>
+      <p v-if="loading" class="page-sub">Loading…</p>
       <p v-else-if="!filtered.length" class="page-sub">No jobs found.</p>
       <q-card v-for="job in filtered" :key="job.id" class="card" @click="openJob(job.id)">
         <div class="title">{{ job.title || job.name }}</div>
-        <div class="sub">{{ job.companyName }} Â· {{ job.type || 'role' }}</div>
+        <div class="sub">{{ job.companyName }} · {{ job.type || 'role' }}</div>
       </q-card>
     </div>
   </q-page>
@@ -61,8 +61,15 @@ function openJob(id) {
 
 <style scoped>
 .page {
-  padding: 20px;
-  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  padding: clamp(16px, 3vw, 28px) 0;
+  padding-bottom: max(32px, env(safe-area-inset-bottom));
+}
+
+.page-content {
+  width: 100%;
+  max-width: min(960px, 100%);
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .page-title {

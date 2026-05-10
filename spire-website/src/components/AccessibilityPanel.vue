@@ -286,6 +286,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 import { useAccessibilityStore } from 'src/stores/accessibilityStore'
+import { useJobSeekerUiStore } from 'src/stores/jobSeekerUiStore'
 import { ASSISTANT_PEER_ID } from 'src/constants/messaging'
 
 const FAB_KEY = 'spire-a11y-fab-pos-v1'
@@ -298,6 +299,8 @@ const GUIDE_THICK = 10
 
 const route = useRoute()
 const store = useAccessibilityStore()
+const jobSeekerUi = useJobSeekerUiStore()
+const { messagesHubPeerId } = storeToRefs(jobSeekerUi)
 const {
   contrastPreset,
   highlightLinks,
@@ -366,7 +369,8 @@ let fabStartTop = 0
 let dragDistance = 0
 
 function isSpiraChatRoute() {
-  const pid = route.params?.peerId
+  let pid = route.params?.peerId
+  if (!pid && route.path === '/messages') pid = messagesHubPeerId.value
   if (!pid) return false
   try {
     return decodeURIComponent(String(pid)) === ASSISTANT_PEER_ID
@@ -377,10 +381,12 @@ function isSpiraChatRoute() {
 
 /** 1:1 (peer) chat screens use the dock a11y button; keep the floating one off to avoid two controls. */
 function isPeerChatRoute() {
-  return (
-    route.path.startsWith('/messages/chat/') ||
-    route.path.startsWith('/employer/messages/chat/')
-  )
+  if (route.path.startsWith('/employer/messages/chat/')) return true
+  if (route.path.startsWith('/messages/chat/')) return true
+  if (route.path !== '/messages') return false
+  const pid = messagesHubPeerId.value
+  if (!pid || pid === ASSISTANT_PEER_ID) return false
+  return true
 }
 
 /**
@@ -496,10 +502,14 @@ function loadFabPos() {
       const p = JSON.parse(raw)
       if (typeof p.top === 'number') fabTop.value = p.top
       if (typeof p.left === 'number') fabLeft.value = p.left
+      return
     }
   } catch {
     /* ignore */
   }
+  const h = typeof window !== 'undefined' ? window.innerHeight : 800
+  fabLeft.value = 16
+  fabTop.value = Math.max(80, h - 72)
 }
 
 function clampFab() {

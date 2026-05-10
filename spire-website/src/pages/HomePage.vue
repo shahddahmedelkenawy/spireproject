@@ -1,56 +1,31 @@
 <template>
   <q-page class="home-page">
     <div class="home-inner">
-      <JobSeekerStickyHeader />
-
       <section class="welcome-block">
-        <div class="welcome-row">
-          <q-avatar size="44px" class="welcome-avatar">
-            <img v-if="welcomePhotoUrl" :src="welcomePhotoUrl" alt="" class="welcome-avatar-img">
-            <span v-else>{{ welcomeInitial }}</span>
-          </q-avatar>
-          <p class="welcome-line">
-            Welcome, {{ welcomeName }} !
-          </p>
+        <p class="welcome-line">
+          Welcome, {{ welcomeName }} ! 👋
+        </p>
+        <h2 class="section-kicker">
+          Top job picks for you
+        </h2>
+        <p class="section-sub">
+          Based on your profile, preferences, and activity like applies, searches, and saves
+        </p>
+        <div class="filters-toolbar">
+          <q-btn
+            type="button"
+            flat
+            no-caps
+            class="filters-toggle"
+            padding="sm md"
+            icon="tune"
+            label="Filters"
+            @click="showFilters = !showFilters"
+          />
         </div>
       </section>
 
-      <!-- Icon is outside the field so its click never hits the input / open handler -->
       <section class="search-section">
-        <div class="search-bar-row">
-          <button
-            type="button"
-            class="search-icon-btn"
-            aria-label="Hide search filters"
-            @click.stop.prevent="closeSearchFilters"
-          >
-            <q-icon name="search" size="24px" class="search-field-icon" />
-          </button>
-          <div class="search-input-grow" @click="onSearchBarClick">
-            <q-input
-              :model-value="jobSearch"
-              dense
-              borderless
-              placeholder="Search For Roles, Companies Or Locations"
-              class="search-input"
-              @update:model-value="jobStore.setSearch"
-              @focus="openSearchFilters"
-              @click="onSearchBarClick"
-            >
-              <template v-if="jobSearch" #append>
-                <q-btn
-                  round
-                  dense
-                  flat
-                  icon="close"
-                  class="search-clear-btn"
-                  tabindex="-1"
-                  @click.stop="clearJobSearch"
-                />
-              </template>
-            </q-input>
-          </div>
-        </div>
         <q-slide-transition>
           <div v-show="showFilters" class="filters-row">
             <q-btn
@@ -91,9 +66,6 @@
 
       <!-- Jobs feed -->
       <section class="jobs-section">
-        <h2 class="section-title">
-          Recommended Jobs
-        </h2>
         <div v-if="jobStore.loading" class="empty-state">
           <p>Loading Jobs…</p>
         </div>
@@ -132,33 +104,36 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useUserStore } from 'src/stores/userStore'
 import { useJobStore } from 'src/stores/jobStore'
 import JobCard from 'src/components/JobCard.vue'
-import JobSeekerStickyHeader from 'src/components/JobSeekerStickyHeader.vue'
 import { useAuthStore } from 'src/stores/authStore'
 import { countAcceptedConnectionsForUser } from 'src/services/userService'
 import { capitalizeProseWords } from 'src/utils/textFormat'
+import { useJobSeekerUiStore } from 'src/stores/jobSeekerUiStore'
 
 const router = useRouter()
 const userStore = useUserStore()
 const authStore = useAuthStore()
 const jobStore = useJobStore()
+const jobSeekerUi = useJobSeekerUiStore()
 const { search: jobSearch } = storeToRefs(jobStore)
 
 const showFilters = ref(false)
 
+watch(
+  () => jobSeekerUi.openHomeFiltersEpoch,
+  () => {
+    showFilters.value = true
+  }
+)
+
 const welcomeName = computed(() => capitalizeProseWords(userStore.name || 'Spire User'))
 
-const welcomeInitial = computed(() => {
-  const n = (userStore.name || 'S').trim()
-  return (n.charAt(0) || 'S').toUpperCase()
-})
-
-const welcomePhotoUrl = computed(() => userStore.profile?.profilePhotoUrl || '')
+void jobSearch
 
 const filterDefs = [
   {
@@ -210,25 +185,6 @@ function clearAllFilters() {
   jobStore.clearFilters()
 }
 
-function clearJobSearch() {
-  jobStore.setSearch('')
-}
-
-function openSearchFilters() {
-  showFilters.value = true
-}
-
-function closeSearchFilters() {
-  showFilters.value = false
-}
-
-/** Every click on the field (not icon / clear) opens filters — needed when input stays focused */
-function onSearchBarClick(evt) {
-  const t = evt.target
-  if (t.closest?.('.search-icon-btn') || t.closest?.('.search-clear-btn')) return
-  openSearchFilters()
-}
-
 function openJob(id) {
   if (!id) return
   router.push(`/jobseeker/job/${id}`)
@@ -253,123 +209,90 @@ onMounted(async () => {
 
 <style scoped>
 .home-page {
-  padding: 0 16px calc(24px + env(safe-area-inset-bottom));
-  padding-top: env(safe-area-inset-top);
-}
-
-.home-inner {
-  max-width: 480px;
-  margin: 0 auto;
-}
-
-.welcome-block {
-  margin-bottom: 14px;
-}
-
-.welcome-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.welcome-avatar {
-  background-color: #4b1d5a;
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.welcome-avatar-img {
+  padding: 24px var(--spire-layout-gutter) calc(24px + env(safe-area-inset-bottom));
+  padding-top: max(20px, env(safe-area-inset-top));
+  background: #ffffff;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.welcome-line {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: #1e1e1e;
-  line-height: 1.3;
-}
-
-.search-section {
-  margin-bottom: 16px;
-}
-
-.search-bar-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 48px;
-  padding: 4px 10px 4px 12px;
-  border-radius: 999px;
-  background-color: #4b1d5a;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
-.search-input-grow {
-  flex: 1;
-  min-width: 0;
-  cursor: text;
+.home-inner {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
-.search-input :deep(.q-field__control) {
-  background: transparent;
-  box-shadow: none;
-  min-height: 40px;
+.welcome-block {
+  margin-bottom: 28px;
 }
 
-.search-input :deep(.q-field__native),
-.search-input :deep(.q-placeholder) {
-  color: #ffffff;
+.welcome-line {
+  margin: 0 0 20px;
+  font-size: clamp(22px, 3.25vw, 34px);
+  font-weight: 700;
+  color: #0f0f0f;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 
-/* Same visual weight as My Circle `circle-search` prepend icon (dense field default ~24px) */
-.search-field-icon {
-  color: #ffffff;
-  opacity: 0.95;
+.section-kicker {
+  margin: 0 0 10px;
+  font-size: clamp(20px, 2.2vw, 26px);
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -0.01em;
 }
 
-.search-icon-btn {
-  display: inline-flex;
+.section-sub {
+  margin: 0 0 16px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #5c5c66;
+  max-width: 720px;
+}
+
+.filters-toolbar {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  margin: 0;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  cursor: pointer;
-  color: inherit;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.search-clear-btn {
-  color: #ffffff !important;
+.filters-toggle {
+  color: #3d0b52;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: background-color 0.2s ease;
 }
 
-.search-clear-btn :deep(.q-icon) {
-  color: #ffffff !important;
+.filters-toggle:hover {
+  background: rgba(61, 11, 82, 0.08);
+}
+
+.search-section {
+  margin-bottom: 28px;
 }
 
 .filters-row {
-  margin-top: 10px;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
 
 .filter-pill {
   border-radius: 999px;
-  background-color: #4b1d5a;
+  background-color: #3d0b52;
   color: #ffffff;
-  padding: 4px 10px;
+  padding: 6px 14px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.filter-pill:hover {
+  background-color: #4f1568;
 }
 
 .filter-label {
@@ -382,28 +305,22 @@ onMounted(async () => {
   margin-top: 8px;
 }
 
-.section-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1e1e1e;
-  margin: 0 0 12px;
+.empty-state {
+  text-align: center;
+  font-size: 15px;
+  color: #666666;
+  padding: 48px 16px;
+}
+
+.clear-filters-btn {
+  margin-top: 8px;
+  color: #3d0b52;
+  font-weight: 600;
 }
 
 .jobs-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-.empty-state {
-  text-align: center;
-  font-size: 14px;
-  color: #666666;
-}
-
-.clear-filters-btn {
-  margin-top: 4px;
-  color: #4b1d5a;
-  font-weight: 600;
+  gap: 20px;
 }
 </style>

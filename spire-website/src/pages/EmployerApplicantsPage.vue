@@ -1,7 +1,6 @@
 <template>
   <q-page class="page">
     <div class="inner">
-      <EmployerStickyHeader />
       <div class="title-row">
         <h1 class="title">New Applicants</h1>
         <span class="count">{{ filteredApplicants.length }} of {{ applicants.length }}</span>
@@ -55,7 +54,6 @@ import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import EmployerApplicantCard from 'src/components/EmployerApplicantCard.vue'
-import EmployerStickyHeader from 'src/components/EmployerStickyHeader.vue'
 import { useAuthStore } from 'src/stores/authStore'
 import { getApplicationsForEmployer, updateApplicationStatus } from 'src/services/applicationService'
 

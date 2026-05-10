@@ -197,11 +197,11 @@
       </div>
 
       <div class="profile-card profile-card--logout">
-        <q-btn
-          no-caps
+      <q-btn
+        no-caps
           unelevated
           class="logout-btn"
-          label="Logout"
+        label="Logout"
           :loading="loggingOut"
           @click="handleLogout"
         />

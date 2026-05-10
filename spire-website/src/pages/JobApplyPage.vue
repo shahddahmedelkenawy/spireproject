@@ -1,7 +1,17 @@
 <template>
   <q-page class="apply-page">
     <div class="apply-inner">
-      <JobSeekerStickyHeader show-back @back="goBack" />
+      <div class="apply-back-row">
+        <q-btn
+          flat
+          round
+          dense
+          icon="arrow_back"
+          class="apply-back-btn"
+          aria-label="Back"
+          @click="goBack"
+        />
+      </div>
 
       <q-inner-loading :showing="pageLoading" color="primary" />
 
@@ -179,7 +189,6 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
-import JobSeekerStickyHeader from 'src/components/JobSeekerStickyHeader.vue'
 import { getJobById } from 'src/services/jobService'
 import { getCompany } from 'src/services/companyService'
 import { getUserProfile } from 'src/services/userService'
@@ -366,15 +375,28 @@ onMounted(load)
 </script>
 
 <style scoped>
+/* Align with ProfilePage `.jsp-page` / `.jsp-inner` column width & backdrop */
 .apply-page {
-  background: #f4f2f6;
+  background: #f0f0f2;
   min-height: 100%;
+  padding-top: env(safe-area-inset-top);
+  box-sizing: border-box;
 }
 
 .apply-inner {
-  max-width: 480px;
+  width: 100%;
+  max-width: var(--spire-content-max);
   margin: 0 auto;
-  padding: 0 14px calc(20px + env(safe-area-inset-bottom));
+  padding: 8px var(--spire-layout-gutter) calc(24px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.apply-back-row {
+  margin: 0 0 12px;
+}
+
+.apply-back-btn {
+  color: #1e1e1e !important;
 }
 
 .banner-err {
@@ -387,11 +409,12 @@ onMounted(load)
 }
 
 .apply-card {
-  border-radius: 18px;
+  width: 100%;
+  border-radius: 16px;
   padding: 16px;
   background: #fff;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 12px rgba(15, 15, 15, 0.06);
+  border: 1px solid rgba(61, 11, 82, 0.08);
   margin-bottom: 14px;
 }
 

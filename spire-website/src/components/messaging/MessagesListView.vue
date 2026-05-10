@@ -1,6 +1,10 @@
 <template>
-  <q-page class="msg-list-page">
-    <div class="msg-list-inner">
+  <component
+    :is="embedded ? 'div' : 'q-page'"
+    class="msg-list-page"
+    :class="{ 'msg-list-page--embedded': embedded }"
+  >
+    <div class="msg-list-inner" :class="{ 'msg-list-inner--embedded': embedded }">
       <header class="msg-list-header">
         <div class="msg-list-title-row">
           <h1 class="msg-list-title">{{ listTitle }}</h1>
@@ -68,14 +72,23 @@
         <button
           type="button"
           class="msg-row"
+          :class="{ 'msg-row--active': rowIsActive(assistant.peerId) }"
           @click="openChat(assistant.peerId)"
         >
-          <q-avatar size="48px" class="msg-avatar msg-avatar--bot">
-            <q-icon name="smart_toy" size="26px" />
+          <q-avatar size="48px" class="msg-avatar msg-avatar--bot msg-avatar--spire">
+            <q-icon name="smart_toy" class="msg-spira-bot-ic" size="26px" />
           </q-avatar>
           <div class="msg-row-body">
-            <div class="msg-name-row">
-              <span class="msg-name">{{ assistant.name }}</span>
+            <div class="msg-name-row msg-name-row--spire">
+              <span class="msg-name msg-name--spire">{{ assistant.name }}</span>
+              <span class="msg-spira-badge">{{ assistant.badge }}</span>
+              <button
+                v-if="assistantUnreadDot"
+                type="button"
+                class="msg-spira-unread-dot"
+                aria-label="New message from Spira"
+                @click.stop="dismissAssistantUnreadDot"
+              />
             </div>
             <div class="msg-preview">{{ assistant.preview }}</div>
             <div class="msg-time">{{ assistantTimeLabel }}</div>
@@ -96,7 +109,12 @@
       <q-scroll-area class="msg-scroll">
         <div class="msg-list-padding">
           <template v-for="(chat, index) in filteredChats" :key="chat.peerId">
-            <button type="button" class="msg-row" @click="openChat(chat.peerId)">
+            <button
+              type="button"
+              class="msg-row"
+              :class="{ 'msg-row--active': rowIsActive(chat.peerId) }"
+              @click="openChat(chat.peerId)"
+            >
               <q-avatar size="48px" class="msg-avatar">
                 <img
                   v-if="chat.profilePhotoUrl"
@@ -141,16 +159,20 @@
         </div>
       </q-scroll-area>
     </div>
-  </q-page>
+  </component>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'src/stores/authStore'
-import { listUserConversations } from 'src/services/messageService'
-import { ASSISTANT_PEER_ID, assistantConversationDefaults } from 'src/constants/messaging'
+import { listUserConversations, subscribeChatHistory } from 'src/services/messageService'
+import {
+  ASSISTANT_PEER_ID,
+  assistantConversationDefaults,
+  spireAssistantSeenMsgKey,
+} from 'src/constants/messaging'
 
 const props = defineProps({
   variant: {
@@ -158,7 +180,24 @@ const props = defineProps({
     default: 'jobseeker',
     validator: (v) => ['jobseeker', 'employer'].includes(v),
   },
+  /** When true, render as a panel inside the split dashboard (no q-page wrapper). */
+  embedded: {
+    type: Boolean,
+    default: false,
+  },
+  /** WhatsApp-style hub: selection is driven by parent state (no route navigation on click). */
+  hubSelectionMode: {
+    type: Boolean,
+    default: false,
+  },
+  /** Current peer id when hubSelectionMode is true (highlights row). */
+  selectedPeerId: {
+    type: String,
+    default: '',
+  },
 })
+
+const emit = defineEmits(['select-peer'])
 
 const authStore = useAuthStore()
 const route = useRoute()
@@ -187,6 +226,16 @@ const assistantTimeLabel = computed(() => {
 const basePath = computed(() =>
   props.variant === 'employer' ? '/employer/messages' : '/messages'
 )
+
+const activePeerId = computed(() => {
+  if (props.hubSelectionMode) return props.selectedPeerId || ''
+  const raw = route.params.peerId
+  return raw ? decodeURIComponent(String(raw)) : ''
+})
+
+function rowIsActive(peerId) {
+  return !!activePeerId.value && activePeerId.value === peerId
+}
 
 const chats = ref([])
 const loading = ref(true)
@@ -231,15 +280,27 @@ function toggleStar(peerId) {
   persistStarred()
 }
 
+function startOfDayMs(d) {
+  const x = new Date(d)
+  x.setHours(0, 0, 0, 0)
+  return x.getTime()
+}
+
 function formatListTime(timestamp) {
   if (!timestamp?.toDate) return ''
   const date = timestamp.toDate()
-  return date.toLocaleString([], {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const now = new Date()
+  const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  if (startOfDayMs(date) === startOfDayMs(now)) {
+    return `Today | ${timeStr}`
+  }
+  const y = new Date(now)
+  y.setDate(y.getDate() - 1)
+  if (startOfDayMs(date) === startOfDayMs(y)) {
+    return `Yesterday | ${timeStr}`
+  }
+  const datePart = date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+  return `${datePart} | ${timeStr}`
 }
 
 const filteredChats = computed(() => {
@@ -258,7 +319,79 @@ const filteredChats = computed(() => {
   return list
 })
 
+function lastInboundAssistantMsgId(list) {
+  for (let i = list.length - 1; i >= 0; i--) {
+    const m = list[i]
+    if (m.senderId === ASSISTANT_PEER_ID && m.id) return m.id
+  }
+  return ''
+}
+
+const assistantThreadMessages = ref([])
+const seenSpireAssistantMsgId = ref('')
+let unsubAssistantThread = null
+
+function loadSeenSpireAssistant() {
+  const uid = authStore.user?.uid
+  seenSpireAssistantMsgId.value = uid ? localStorage.getItem(spireAssistantSeenMsgKey(uid)) || '' : ''
+}
+
+function persistSeenSpireAssistant(id) {
+  const uid = authStore.user?.uid
+  if (!uid || !id) return
+  seenSpireAssistantMsgId.value = id
+  localStorage.setItem(spireAssistantSeenMsgKey(uid), id)
+}
+
+const assistantUnreadDot = computed(() => {
+  const latest = lastInboundAssistantMsgId(assistantThreadMessages.value)
+  if (!latest) return false
+  if (props.hubSelectionMode && props.selectedPeerId === ASSISTANT_PEER_ID) return false
+  return latest !== seenSpireAssistantMsgId.value
+})
+
+function bindAssistantThreadListener() {
+  if (unsubAssistantThread) {
+    unsubAssistantThread()
+    unsubAssistantThread = null
+  }
+  const uid = authStore.user?.uid
+  if (!uid) return
+  loadSeenSpireAssistant()
+  unsubAssistantThread = subscribeChatHistory(uid, ASSISTANT_PEER_ID, (list) => {
+    assistantThreadMessages.value = list
+    const inboundId = lastInboundAssistantMsgId(list)
+    if (props.hubSelectionMode && props.selectedPeerId === ASSISTANT_PEER_ID && inboundId) {
+      persistSeenSpireAssistant(inboundId)
+    }
+  })
+}
+
+function dismissAssistantUnreadDot() {
+  const id = lastInboundAssistantMsgId(assistantThreadMessages.value)
+  if (id) persistSeenSpireAssistant(id)
+}
+
+watch(
+  [() => props.hubSelectionMode, () => props.selectedPeerId, assistantThreadMessages],
+  () => {
+    const inboundId = lastInboundAssistantMsgId(assistantThreadMessages.value)
+    if (props.hubSelectionMode && props.selectedPeerId === ASSISTANT_PEER_ID && inboundId) {
+      persistSeenSpireAssistant(inboundId)
+    }
+  },
+  { deep: true }
+)
+
 function openChat(peerId) {
+  if (peerId === ASSISTANT_PEER_ID) {
+    const id = lastInboundAssistantMsgId(assistantThreadMessages.value)
+    if (id) persistSeenSpireAssistant(id)
+  }
+  if (props.hubSelectionMode) {
+    emit('select-peer', peerId)
+    return
+  }
   router.push({
     path: `${basePath.value}/chat/${encodeURIComponent(peerId)}`,
   })
@@ -287,7 +420,7 @@ function refreshList() {
 onMounted(() => {
   if (starredKey.value) starredPeers.value = loadStarred()
   loadConversations()
-  if (route.query.peer) {
+  if (!props.hubSelectionMode && route.query.peer) {
     const p = String(route.query.peer)
     router.replace({ path: `${basePath.value}/chat/${encodeURIComponent(p)}` })
   }
@@ -297,8 +430,22 @@ watch(
   () => authStore.user?.uid,
   (uid) => {
     if (uid && starredKey.value) starredPeers.value = loadStarred()
-  }
+    loadSeenSpireAssistant()
+    if (uid) bindAssistantThreadListener()
+    else if (unsubAssistantThread) {
+      unsubAssistantThread()
+      unsubAssistantThread = null
+    }
+  },
+  { immediate: true }
 )
+
+onBeforeUnmount(() => {
+  if (unsubAssistantThread) {
+    unsubAssistantThread()
+    unsubAssistantThread = null
+  }
+})
 </script>
 
 <style scoped>
@@ -310,12 +457,35 @@ watch(
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+.msg-list-page--embedded {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding-top: 0;
+  overflow: hidden;
+}
+
 .msg-list-inner {
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: calc(100vh - 56px - env(safe-area-inset-bottom));
-  min-height: calc(100dvh - 56px - env(safe-area-inset-bottom));
+  min-height: calc(100vh - var(--jsk-nav-height, 94px) - env(safe-area-inset-bottom));
+  min-height: calc(100dvh - var(--jsk-nav-height, 94px) - env(safe-area-inset-bottom));
+}
+
+.msg-list-inner--embedded {
+  flex: 1 1 auto;
+  min-height: 0 !important;
+  height: auto;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.msg-list-page--embedded .msg-list-inner {
+  flex: 1 1 auto;
 }
 
 .msg-list-header {
@@ -391,8 +561,13 @@ watch(
 }
 
 .msg-scroll {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
+  max-height: 100%;
+}
+
+.msg-scroll :deep(.q-scrollarea) {
+  height: 100%;
 }
 
 .msg-list-padding {
@@ -414,8 +589,24 @@ watch(
   border-radius: 16px;
 }
 
-.msg-row:active {
+.msg-row:hover {
   background: rgba(255, 255, 255, 0.06);
+}
+
+.msg-row:active {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.msg-row--active {
+  background: rgba(90, 30, 100, 0.55);
+  box-shadow:
+    inset 3px 0 0 rgba(255, 255, 255, 0.85),
+    0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 6px 18px rgba(0, 0, 0, 0.22);
+}
+
+.msg-row--active:hover {
+  background: rgba(105, 40, 115, 0.55);
 }
 
 .msg-avatar {
@@ -429,6 +620,52 @@ watch(
 .msg-avatar--bot {
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
+}
+
+.msg-avatar--spire {
+  background: rgba(255, 255, 255, 0.95);
+  color: #4b1d4f;
+}
+
+.msg-spira-bot-ic {
+  color: #4b1d4f;
+}
+
+.msg-name-row--spire {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+
+.msg-name--spire {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.msg-spira-badge {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  opacity: 0.95;
+}
+
+.msg-spira-unread-dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  margin: 0 0 0 2px;
+  border: none;
+  border-radius: 50%;
+  background: #b388ff;
+  box-shadow: 0 0 0 2px rgba(75, 29, 90, 0.45);
+  cursor: pointer;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.msg-spira-unread-dot:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }
 
 .msg-avatar-img {

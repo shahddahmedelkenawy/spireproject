@@ -1133,9 +1133,11 @@ watch(
 }
 
 .jsp-inner {
-  max-width: 480px;
+  width: 100%;
+  max-width: var(--spire-content-max);
   margin: 0 auto;
-  padding: 16px;
+  padding: 16px var(--spire-layout-gutter);
+  box-sizing: border-box;
 }
 
 .jsp-loading {

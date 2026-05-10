@@ -1,7 +1,6 @@
 <template>
   <q-page class="page">
     <div class="inner">
-      <EmployerStickyHeader />
       <q-btn
         unelevated
         no-caps
@@ -65,7 +64,6 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'src/stores/authStore'
-import EmployerStickyHeader from 'src/components/EmployerStickyHeader.vue'
 import { getCompanyByOwner } from 'src/services/companyService'
 import { listCompanyJobs, deleteJob } from 'src/services/jobService'
 

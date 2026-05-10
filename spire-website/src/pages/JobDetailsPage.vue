@@ -1,7 +1,6 @@
 ﻿<template>
   <q-page class="page">
     <div class="inner">
-      <q-btn flat round icon="arrow_back" @click="$router.back()" />
       <q-card class="card">
         <h1>{{ job?.title || job?.name || 'Job Details' }}</h1>
         <p v-if="companyName" class="company">{{ companyName }}</p>

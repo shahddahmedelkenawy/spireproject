@@ -1,7 +1,6 @@
 <template>
   <q-page class="upgrade-plans-page">
     <div class="plans-inner">
-      <JobSeekerStickyHeader />
 
       <header class="plans-hero">
         <h1 class="page-title">Choose your plan</h1>
@@ -106,7 +105,6 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-import JobSeekerStickyHeader from 'src/components/JobSeekerStickyHeader.vue'
 
 const router = useRouter()
 
@@ -125,20 +123,24 @@ function goGolden() {
 
 <style scoped>
 .upgrade-plans-page {
-  background: linear-gradient(180deg, #f7f4fa 0%, #f0eaf5 50%, #f4f2f6 100%);
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--spire-baby-purple);
   min-height: 100%;
 }
 
 .plans-inner {
-  max-width: 420px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0 20px 40px;
+  padding: clamp(32px, 6vw, 56px) var(--spire-layout-gutter) clamp(32px, 5vw, 48px);
+  box-sizing: border-box;
 }
 
 .plans-hero {
   text-align: center;
-  margin-bottom: 28px;
-  padding-top: 4px;
+  margin-bottom: clamp(22px, 3vw, 32px);
+  padding-top: clamp(8px, 2vw, 16px);
   animation: hero-in 0.5s ease-out;
 }
 
@@ -163,20 +165,32 @@ function goGolden() {
 }
 
 .page-lead {
-  margin: 0;
-  max-width: 32ch;
-  margin-left: auto;
-  margin-right: auto;
-  font-size: 0.9rem;
-  line-height: 1.55;
+  margin: 0 auto;
+  max-width: min(52ch, 100%);
+  font-size: clamp(0.875rem, 2vw, 0.95rem);
+  line-height: 1.6;
   color: #5c5670;
   font-weight: 500;
 }
 
 .plans-stagger {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(16px, 2.5vw, 24px);
+  width: 100%;
+  align-items: stretch;
+}
+
+@media (min-width: 640px) and (max-width: 899px) {
+  .plans-stagger {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .plans-stagger {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 /* Staggered enter */
@@ -194,6 +208,10 @@ function goGolden() {
   text-align: left;
   position: relative;
   width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   border: 2px solid var(--plan-purple-border);
   border-radius: 24px;
   padding: 22px 20px 20px;
@@ -270,6 +288,13 @@ function goGolden() {
   margin-bottom: 16px;
   padding-bottom: 16px;
   border-bottom: 1px solid rgba(30, 20, 40, 0.07);
+  flex-shrink: 0;
+}
+
+@media (min-width: 900px) {
+  .plan-card-top {
+    min-height: 118px;
+  }
 }
 
 .plan-badge {
@@ -318,17 +343,19 @@ function goGolden() {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 11px;
+  flex: 1 1 auto;
 }
 
 .plan-feature {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  font-size: 0.84rem;
-  line-height: 1.5;
+  gap: 10px;
+  font-size: 0.82rem;
+  line-height: 1.45;
   color: #3a3540;
   font-weight: 500;
+  min-height: 2.35em;
 }
 
 .feat-ic {
@@ -353,6 +380,9 @@ function goGolden() {
   color: #4b1e5a;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  margin-top: auto;
+  flex-shrink: 0;
+  padding-top: 4px;
 }
 
 .plan-cta-arrow {

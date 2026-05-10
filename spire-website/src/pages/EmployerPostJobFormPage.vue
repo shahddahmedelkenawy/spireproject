@@ -1,7 +1,6 @@
 <template>
   <q-page class="job-seeker-page spire-form-page">
     <div class="page-inner spire-form-shell">
-      <EmployerStickyHeader surface="dark" />
       <div class="top-section">
         <h1 class="title">{{ isEdit ? 'Edit Job' : 'Add Job' }}</h1>
         <p class="subtitle">
@@ -164,7 +163,6 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
-import EmployerStickyHeader from 'src/components/EmployerStickyHeader.vue'
 import { useAuthStore } from 'src/stores/authStore'
 import { createJob, getJobById, updateJob } from 'src/services/jobService'
 import { getCompanyByOwner } from 'src/services/companyService'

@@ -7,6 +7,17 @@ html {
   --spire-text-scale: 1;
   --spire-text-zoom: 1;
   --spire-line-height: normal;
+  --jsk-nav-height: 70px;
+  --spire-layout-gutter: clamp(16px, 4vw, 40px);
+  --spire-content-max: min(1200px, 100%);
+  --spire-purple: #3d0b52;
+  --spire-purple-light: #ede4f3;
+  --spire-border-subtle: rgba(61, 11, 82, 0.1);
+  --spire-shadow-card: 0 4px 24px rgba(15, 15, 30, 0.07);
+  --spire-shadow-soft: 0 2px 12px rgba(61, 11, 82, 0.08);
+  --spire-radius-md: 12px;
+  --spire-radius-lg: 16px;
+  --spire-ease: cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 16px;
 }
 

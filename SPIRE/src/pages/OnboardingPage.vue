@@ -15,9 +15,6 @@
       v-model="currentSlide"
       swipeable
       animated
-      navigation
-      control-color="primary"
-      padding
       class="onboarding-carousel"
       @transition="onSlideChange"
     >
@@ -46,6 +43,20 @@
             {{ slide.caption }}
           </p>
 
+          <!-- Dots directly under the text -->
+          <div class="onboarding-dots" role="tablist" aria-label="Onboarding steps">
+            <button
+              v-for="(_, i) in slides"
+              :key="i"
+              type="button"
+              class="onboarding-dot"
+              :class="{ 'onboarding-dot--active': currentSlide === i }"
+              :aria-current="currentSlide === i ? 'step' : undefined"
+              :aria-label="`Go to slide ${i + 1}`"
+              @click="currentSlide = i"
+            />
+          </div>
+
           <div v-if="slide.showActions" class="slide-actions">
             <q-btn
               no-caps
@@ -65,25 +76,31 @@
       </q-carousel-slide>
     </q-carousel>
 
-    <div class="bottom-arrows" :class="currentSlide === 0 ? 'bottom-arrows--center' : 'bottom-arrows--sides'">
-      <q-btn
-        v-if="currentSlide > 0"
-        round
-        unelevated
-        color="primary"
-        icon="arrow_back"
-        class="nav-arrow nav-arrow--left"
-        @click="prevSlide"
-      />
-      <q-btn
-        v-if="currentSlide < slides.length - 1"
-        round
-        unelevated
-        color="primary"
-        icon="arrow_forward"
-        class="nav-arrow nav-arrow--right"
-        @click="nextSlide"
-      />
+    <div class="bottom-arrows">
+      <div class="bottom-arrows__side bottom-arrows__side--left">
+        <q-btn
+          v-if="currentSlide > 0"
+          round
+          unelevated
+          color="primary"
+          icon="arrow_back"
+          class="nav-arrow"
+          aria-label="Previous slide"
+          @click="prevSlide"
+        />
+      </div>
+      <div class="bottom-arrows__side bottom-arrows__side--right">
+        <q-btn
+          v-if="currentSlide < slides.length - 1"
+          round
+          unelevated
+          color="primary"
+          icon="arrow_forward"
+          class="nav-arrow"
+          aria-label="Next slide"
+          @click="nextSlide"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -175,35 +192,25 @@ function goToSignUp(role) {
 
 .onboarding-carousel {
   flex: 1;
-  background: transparent !important;
+  background: #ffffff !important;
 }
 
-.onboarding-carousel :deep(.q-carousel__navigation) {
-  bottom: 100px;
+.onboarding-carousel :deep(.q-carousel__viewport),
+.onboarding-carousel :deep(.q-carousel__slides-container),
+.onboarding-carousel :deep(.q-carousel__slide),
+.onboarding-carousel :deep(.q-panel) {
+  background: #ffffff !important;
 }
 
-.onboarding-carousel :deep(.q-carousel__navigation-inner) {
-  justify-content: center;
-}
-
-.onboarding-carousel :deep(.q-carousel__navigation-icon) {
-  font-size: 6px;
-  color: #e0d4f2;
-}
-
-.onboarding-carousel :deep(.q-carousel__navigation-icon--active) {
-  color: #4b1f4f;
-}
-
-.onboarding-carousel :deep(.q-carousel__arrow .q-icon) {
-  font-size: 20px;
+.onboarding-carousel :deep(.q-carousel__slide) {
+  padding-bottom: 100px;
 }
 
 .slide {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px 24px 40px;
+  padding: 16px 24px 24px;
 }
 
 .slide-content {
@@ -212,17 +219,55 @@ function goToSignUp(role) {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  height: 100%;
+  justify-content: flex-start;
+  min-height: 0;
+  flex: 1;
 }
 
 .slide-illustration {
   max-width: 320px;
   width: 70%;
-  height: 320px;
+  height: 280px;
   object-fit: contain;
-  margin: 0 auto 32px;
+  margin: 0 auto 24px;
   display: block;
+}
+
+.onboarding-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin: 16px 0 20px;
+  flex-shrink: 0;
+}
+
+.onboarding-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(75, 31, 79, 0.35);
+  padding: 0;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 1);
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.onboarding-dot:focus-visible {
+  outline: 2px solid #4b1f4f;
+  outline-offset: 3px;
+}
+
+.onboarding-dot--active {
+  background: #4b1f4f;
+  border-color: #4b1f4f;
+  box-shadow: 0 2px 8px rgba(75, 31, 79, 0.35);
+  transform: scale(1.08);
 }
 
 .slide-heading {
@@ -285,30 +330,32 @@ function goToSignUp(role) {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 32px;
-  padding: 0 24px;
-  display: flex;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
   pointer-events: none;
+  z-index: 2;
 }
 
-.bottom-arrows--center {
-  justify-content: center;
+.bottom-arrows__side {
+  pointer-events: auto;
+  display: flex;
+  min-height: 48px;
+  align-items: center;
 }
 
-.bottom-arrows--sides {
-  justify-content: space-between;
+.bottom-arrows__side--left {
+  justify-content: flex-start;
+}
+
+.bottom-arrows__side--right {
+  justify-content: flex-end;
 }
 
 .nav-arrow {
-  pointer-events: auto;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
-}
-
-.nav-arrow--left {
-  align-self: flex-start;
-}
-
-.nav-arrow--right {
-  align-self: flex-end;
 }
 </style>

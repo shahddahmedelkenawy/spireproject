@@ -2,7 +2,7 @@
   <q-card class="job-card" @click="$emit('open', job.id)">
     <div class="job-card-main">
       <div class="job-left">
-        <q-avatar class="job-logo" size="40px">
+        <q-avatar class="job-logo" size="56px">
           <span>{{ job.logoInitials }}</span>
         </q-avatar>
         <div class="job-info">
@@ -56,96 +56,143 @@ void props
 
 <style scoped>
 .job-card {
-  border-radius: 18px;
-  padding: 14px 14px 10px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  border-radius: 16px;
+  padding: 20px 22px 16px;
+  border: 1px solid rgba(61, 11, 82, 0.08);
+  box-shadow: 0 2px 12px rgba(15, 15, 15, 0.06);
   background: #ffffff;
+  transition:
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.2s ease;
+}
+
+.job-card:hover {
+  box-shadow: 0 8px 28px rgba(61, 11, 82, 0.12);
+  border-color: rgba(61, 11, 82, 0.14);
 }
 
 .job-card-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 20px;
 }
 
 .job-left {
   display: flex;
   align-items: center;
-  gap: 10px;
-  max-width: 247px;
+  gap: 16px;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .job-logo {
+  flex-shrink: 0;
   background: #f3e8ff;
-  color: #4B1E5A;
+  color: #3d0b52;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .job-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  min-width: 0;
 }
 
 .job-title {
-  font-size: 15px;
+  font-size: clamp(16px, 1.25vw, 18px);
   font-weight: 700;
-  color: #1e1e1e;
+  color: #0f0f0f;
+  line-height: 1.3;
 }
 
 .job-company {
-  font-size: 13px;
-  color: #6b6b6b;
+  font-size: 14px;
+  color: #5c5c66;
 }
 
 .job-location {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: #8a8a8a;
+  gap: 6px;
+  font-size: 13px;
+  color: #73737d;
+}
+
+.job-location :deep(.q-icon) {
+  color: #8b8b96;
 }
 
 .job-right {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .apply-btn {
   border-radius: 999px;
-  background-color: #4B1E5A;
+  background-color: #3d0b52;
   color: #ffffff;
-  padding: 0 16px;
-  height: 36px;
-  font-size: 13px;
+  padding: 0 22px;
+  min-height: 42px;
+  font-size: 14px;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(75, 30, 90, 0.35);
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(61, 11, 82, 0.35);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
 }
 
 .apply-btn:hover,
 .apply-btn:focus {
-  background-color: #ffffff;
-  color: #4B1E5A;
-  border: 1px solid #4B1E5A;
-  box-shadow: 0 6px 16px rgba(75, 30, 90, 0.4);
+  background-color: #4f1568;
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(61, 11, 82, 0.45);
+  transform: translateY(-1px);
 }
 
 .job-tags {
-  margin-top: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
 .tag-chip {
   border-radius: 999px;
-  background-color: #f3e8ff;
-  color: #4B1E5A;
+  background-color: #f4eef8;
+  color: #3d0b52;
   font-size: 11px;
-  padding: 2px 8px;
+  font-weight: 600;
+  padding: 4px 10px;
+}
+
+@media (max-width: 599px) {
+  .job-card-main {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .job-right {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .apply-btn {
+    width: 100%;
+  }
+
+  .job-left {
+    align-items: flex-start;
+  }
 }
 </style>
 

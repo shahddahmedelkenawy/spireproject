@@ -8,3 +8,8 @@ export const assistantConversationDefaults = {
   badge: 'Your assistant',
   preview: 'Jobs, hiring & using Spire. Ask me anything.',
 }
+
+/** localStorage: last seen Spira *inbound* message doc id (for list unread dot). */
+export function spireAssistantSeenMsgKey(uid) {
+  return `spireAssistantSeenMsg:${uid || ''}`
+}

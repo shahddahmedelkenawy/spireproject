@@ -347,43 +347,62 @@ async function submit() {
 
 <style scoped>
 .checkout-page {
+  width: 100%;
+  box-sizing: border-box;
   min-height: 100vh;
   min-height: 100dvh;
-  background: linear-gradient(165deg, #e8dff5 0%, #e2d4f0 40%, #ddd0ec 100%);
+  background: var(--spire-baby-purple);
   position: relative;
 }
 
 .back-fab {
   position: fixed;
   top: max(12px, env(safe-area-inset-top));
-  left: 8px;
+  left: max(12px, env(safe-area-inset-left));
   z-index: 10;
-  color: #4b1e5a !important;
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-.back-fab:hover {
-  background: rgba(75, 30, 90, 0.08) !important;
-  transform: scale(1.05);
+  width: 44px;
+  height: 44px;
+  color: #ffffff !important;
+  background: #4b1e5a !important;
+  box-shadow: 0 4px 16px rgba(75, 30, 90, 0.35);
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
+.back-fab:hover {
+  background: #5c2470 !important;
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(75, 30, 90, 0.42);
+}
+
+/* Match ProfilePage content column: `.jsp-inner` uses `max-width: var(--spire-content-max)` + gutters */
 .checkout-wrap {
-  max-width: 420px;
+  width: 100%;
+  max-width: var(--spire-content-max);
   margin: 0 auto;
-  padding: max(24px, env(safe-area-inset-top) + 20px) 18px 40px;
-  min-height: 100%;
+  padding: max(72px, env(safe-area-inset-top) + 52px) var(--spire-layout-gutter) max(40px, env(safe-area-inset-bottom));
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 .checkout-card {
   width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
   background: rgba(255, 255, 255, 0.98);
-  border-radius: 24px;
-  padding: 28px 22px 26px;
-  box-shadow: 0 4px 6px rgba(40, 20, 60, 0.04), 0 20px 50px rgba(75, 30, 90, 0.14);
+  border-radius: 20px;
+  padding: clamp(20px, 3vw, 26px) clamp(16px, 3vw, 22px) clamp(20px, 3vw, 24px);
+  box-shadow: 0 4px 6px rgba(40, 20, 60, 0.04), 0 16px 40px rgba(75, 30, 90, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.9);
   animation: card-in 0.45s ease-out;
+  box-sizing: border-box;
 }
 
 @keyframes card-in {
@@ -562,13 +581,18 @@ async function submit() {
 }
 
 .success-card {
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
   text-align: center;
-  padding: 48px 24px;
+  padding: clamp(28px, 4vw, 40px) clamp(18px, 3vw, 24px);
   background: rgba(255, 255, 255, 0.98);
-  border-radius: 24px;
-  box-shadow: 0 20px 50px rgba(75, 30, 90, 0.16);
+  border-radius: 20px;
+  box-shadow: 0 16px 40px rgba(75, 30, 90, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.9);
   animation: success-in 0.5s ease;
+  box-sizing: border-box;
 }
 @keyframes success-in {
   from {

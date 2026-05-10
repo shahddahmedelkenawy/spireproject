@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&display=swap');
 
 // app global css in SCSS form
@@ -7,6 +7,20 @@ html {
   --spire-text-scale: 1;
   --spire-text-zoom: 1;
   --spire-line-height: normal;
+  --jsk-nav-height: 94px;
+  /* Full-width layouts: consistent horizontal rhythm (responsive gutter). */
+  --spire-layout-gutter: clamp(16px, 4vw, 40px);
+  --spire-content-max: min(1200px, 100%);
+  /* Premium surfaces */
+  --spire-purple: #3d0b52;
+  --spire-purple-light: #ede4f3;
+  --spire-baby-purple: #ede7f6;
+  --spire-border-subtle: rgba(61, 11, 82, 0.1);
+  --spire-shadow-card: 0 4px 24px rgba(15, 15, 30, 0.07);
+  --spire-shadow-soft: 0 2px 12px rgba(61, 11, 82, 0.08);
+  --spire-radius-md: 12px;
+  --spire-radius-lg: 16px;
+  --spire-ease: cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 16px;
 }
 
@@ -78,15 +92,25 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #4b1e5a;
+  background: #3d0b52;
   color: #fff;
   cursor: grab;
-  box-shadow: 0 6px 20px rgba(75, 30, 90, 0.45);
+  box-shadow: 0 6px 20px rgba(61, 11, 82, 0.45);
   touch-action: none;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .a11y-float-btn:active {
   cursor: grabbing;
+}
+
+.a11y-float-btn:hover {
+  background: #4f1568;
+  box-shadow: 0 8px 26px rgba(61, 11, 82, 0.5);
+  transform: scale(1.04);
 }
 
 
@@ -287,6 +311,41 @@ html[data-a11y-text-size="largest"] #q-app {
 /* First letter of each label word (field values use JS blur/save rules, not forced lowercasing). */
 #q-app .q-field__label {
   text-transform: capitalize;
+}
+
+/* ---- Global premium polish (Quasar surfaces; non-destructive defaults) ---- */
+
+#q-app .q-field--outlined .q-field__control {
+  border-radius: var(--spire-radius-md);
+  transition:
+    box-shadow 0.2s var(--spire-ease),
+    border-color 0.2s var(--spire-ease);
+}
+
+#q-app .q-field--outlined.q-field--focused .q-field__control:before {
+  border-color: var(--spire-purple);
+  box-shadow: 0 0 0 3px rgba(61, 11, 82, 0.12);
+}
+
+#q-app .q-card:not(.a11y-panel) {
+  border-radius: var(--spire-radius-lg);
+}
+
+#q-app .q-dialog .q-card {
+  border-radius: var(--spire-radius-lg);
+}
+
+#q-app .q-btn.q-btn--unelevated:not(.q-btn--round) {
+  border-radius: 999px;
+  font-weight: 600;
+  transition:
+    transform 0.2s var(--spire-ease),
+    box-shadow 0.2s var(--spire-ease),
+    background-color 0.2s var(--spire-ease);
+}
+
+#q-app .q-btn.q-btn--unelevated:not(.q-btn--round):hover {
+  box-shadow: var(--spire-shadow-soft);
 }
 
 @import './profileViewShared.scss';

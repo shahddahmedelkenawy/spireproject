@@ -1,18 +1,16 @@
 <template>
   <q-layout view="hHh lpR fFf" class="employer-layout">
-    <WebTopNav v-if="isWeb" :nav-items="webNavItems" />
-
     <q-page-container
       class="employer-container"
       :class="{
         'employer-container--chat': hideFooter,
-        'employer-container--web': isWeb,
+        'employer-container--mobile-tabs': !hideFooter,
       }"
     >
       <router-view />
     </q-page-container>
 
-    <q-footer v-if="!hideFooter && !isWeb" elevated class="employer-footer">
+    <q-footer v-if="!hideFooter" class="employer-footer" elevated>
       <q-tabs
         :model-value="activeTab"
         class="employer-tabs"
@@ -22,45 +20,60 @@
         no-caps
         align="justify"
       >
-        <q-route-tab to="/employer/dashboard" name="dashboard" icon="dashboard" label="Dashboard" />
-        <q-route-tab to="/employer/applicants" name="applicants" icon="groups" label="Applicants" />
-        <q-route-tab to="/employer/post-job" name="post-job" icon="add_circle_outline" label="Post Job" />
-        <q-route-tab to="/employer/messages" name="messages" icon="chat_bubble_outline" label="Messages" />
-        <q-route-tab to="/employer/profile" name="profile" icon="person_outline" label="Profile" />
+        <q-route-tab
+          to="/employer/dashboard"
+          name="dashboard"
+          icon="dashboard"
+          label="Dashboard"
+        />
+        <q-route-tab
+          to="/employer/applicants"
+          name="applicants"
+          icon="groups"
+          label="Applicants"
+        />
+        <q-route-tab
+          to="/employer/post-job"
+          name="post-job"
+          icon="add_circle_outline"
+          label="Post Job"
+        />
+        <q-route-tab
+          to="/employer/messages"
+          name="messages"
+          icon="chat_bubble_outline"
+          label="Messages"
+        />
+        <q-route-tab
+          to="/employer/profile"
+          name="profile"
+          icon="person_outline"
+          label="Profile"
+        />
       </q-tabs>
     </q-footer>
-
-    <WebFooter v-if="isWeb" />
   </q-layout>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useQuasar } from 'quasar'
-import WebTopNav from 'src/components/WebTopNav.vue'
-import WebFooter from 'src/components/WebFooter.vue'
 
 const route = useRoute()
-const $q = useQuasar()
 
 const hideFooter = computed(
-  () => route.meta?.hideFooter === true || route.path.includes('/employer/messages/chat')
+  () => route.meta?.hideFooter === true || route.path.includes('/employer/messages/chat'),
 )
-const isWeb = computed(() => $q.screen.gt.sm)
-const webNavItems = [
-  { label: 'Dashboard', to: '/employer/dashboard' },
-  { label: 'Applicants', to: '/employer/applicants' },
-  { label: 'Post Job', to: '/employer/post-job' },
-  { label: 'Messages', to: '/employer/messages' },
-  { label: 'Profile', to: '/employer/profile' },
-]
 
 const activeTab = computed(() => {
-  if (route.path.includes('/employer/applicants')) return 'applicants'
-  if (route.path.includes('/employer/post-job')) return 'post-job'
-  if (route.path.includes('/employer/messages')) return 'messages'
-  if (route.path.includes('/employer/profile')) return 'profile'
+  const p = route.path
+  if (p.includes('/employer/applicants') || p.includes('/employer/applicant/')) {
+    return 'applicants'
+  }
+  if (p.includes('/employer/user/')) return 'applicants'
+  if (p.includes('/employer/post-job')) return 'post-job'
+  if (p.includes('/employer/messages')) return 'messages'
+  if (p.includes('/employer/profile')) return 'profile'
   return 'dashboard'
 })
 </script>
@@ -69,20 +82,23 @@ const activeTab = computed(() => {
 .employer-layout {
   min-height: 100vh;
   min-height: 100dvh;
-  background: #f6f6f7;
+  background: #f6f7f9;
 }
 
 .employer-container {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding-top: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: var(--spire-layout-gutter);
+  padding-right: var(--spire-layout-gutter);
+  box-sizing: border-box;
 }
 
-.employer-container--web {
-  width: min(1200px, 100%);
-  margin: 0 auto;
-  padding-top: 0;
-  padding-bottom: 0;
-  min-height: calc(100vh - 72px - 104px);
+.employer-container--mobile-tabs {
+  min-height: calc(100vh - 56px - env(safe-area-inset-bottom));
+  padding-bottom: calc(56px + env(safe-area-inset-bottom));
 }
 
 .employer-container--chat {
@@ -92,7 +108,7 @@ const activeTab = computed(() => {
 }
 
 .employer-footer {
-  background: #4b1d5a;
+  background: #4b1e5a !important;
   padding-bottom: env(safe-area-inset-bottom);
   border-top-left-radius: 22px;
   border-top-right-radius: 22px;
@@ -101,11 +117,16 @@ const activeTab = computed(() => {
 
 .employer-tabs {
   height: 56px;
-  color: #d8d8d8;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .employer-tabs :deep(.q-tab) {
   min-width: 0;
+  padding: 8px 4px;
+}
+
+.employer-tabs :deep(.q-tab__icon) {
+  font-size: 22px;
 }
 
 .employer-tabs :deep(.q-tab__label) {
@@ -116,9 +137,7 @@ const activeTab = computed(() => {
   max-width: 100%;
 }
 
-@media (max-width: 1023px) {
-  .employer-container--web {
-    min-height: calc(100vh - 64px - 124px);
-  }
+.employer-tabs :deep(.q-tab--active) {
+  color: #ffffff;
 }
 </style>
