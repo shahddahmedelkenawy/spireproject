@@ -1,5 +1,5 @@
 <template>
-  <q-header class="public-brand-nav" elevated>
+  <q-header class="public-brand-nav" :class="{ 'public-brand-nav--light': navLight }" elevated>
     <q-toolbar class="public-brand-nav__toolbar">
       <q-btn
         v-if="compact"
@@ -29,10 +29,10 @@
               <q-item-section>{{ item.label }}</q-item-section>
             </q-item>
             <q-separator />
-            <q-item clickable v-close-popup v-ripple @click="router.push('/login')">
+            <q-item clickable v-close-popup v-ripple @click="onLoginClick">
               <q-item-section>Login</q-item-section>
             </q-item>
-            <q-item clickable v-close-popup v-ripple @click="router.push('/signup')">
+            <q-item clickable v-close-popup v-ripple @click="onSignUpClick">
               <q-item-section class="text-weight-bold">Sign up</q-item-section>
             </q-item>
           </q-list>
@@ -40,7 +40,7 @@
       </q-btn>
 
       <router-link to="/" class="public-brand-nav__logo-link">
-        <img :src="logoWhiteSrc" alt="SPIRE" class="public-brand-nav__logo-img" width="140" height="32">
+        <img :src="logoSrc" alt="SPIRE" class="public-brand-nav__logo-img" width="140" height="36">
       </router-link>
 
       <nav v-if="!compact" class="public-brand-nav__links" aria-label="Primary">
@@ -63,14 +63,14 @@
           flat
           class="public-brand-nav__ghost-btn"
           label="Login"
-          :to="{ path: '/login' }"
+          @click="onLoginClick"
         />
         <q-btn
           no-caps
           unelevated
           class="public-brand-nav__cta-btn"
           label="Sign up"
-          :to="{ path: '/signup' }"
+          @click="onSignUpClick"
         />
       </div>
     </q-toolbar>
@@ -82,26 +82,59 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import logoWhiteSrc from 'src/assets/logo white.png'
+import logoDarkSrc from 'src/assets/logo.png'
+import { usePublicAuthDialogStore } from 'src/stores/publicAuthDialogStore'
 
 const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
+const authDialog = usePublicAuthDialogStore()
 
 const compact = computed(() => $q.screen.lt.lg)
 
-const navItems = [
-  { label: 'Home', to: '/', match: 'exact' },
-  { label: 'Jobs', to: '/jobs' },
-  { label: 'Companies', to: '/companies' },
-  { label: 'About', to: '/about' },
-  { label: 'Contact', to: '/contact' },
-]
+const navLight = computed(() => route.meta.publicNavLight === true)
+
+const logoSrc = computed(() => (navLight.value ? logoDarkSrc : logoWhiteSrc))
+
+const navItems = computed(() => {
+  if (navLight.value) {
+    return [
+      { label: 'Our Featured Jobs', to: '/jobs' },
+      { label: 'Our Featured Companies', to: '/companies' },
+      { label: 'About Us', to: '/about' },
+      { label: 'Contact Us', to: '/contact' },
+    ]
+  }
+  return [
+    { label: 'Home', to: '/', match: 'exact' },
+    { label: 'Jobs', to: '/jobs' },
+    { label: 'Companies', to: '/companies' },
+    { label: 'About', to: '/about' },
+    { label: 'Contact', to: '/contact' },
+  ]
+})
 
 function isActive(item) {
   if (item.match === 'exact') {
     return route.path === item.to || route.path === `${item.to}/`
   }
   return route.path === item.to || route.path.startsWith(`${item.to}/`)
+}
+
+function onLoginClick() {
+  if (navLight.value) {
+    authDialog.openLogin()
+    return
+  }
+  router.push({ path: '/login' })
+}
+
+function onSignUpClick() {
+  if (navLight.value) {
+    authDialog.openSignup('seeker')
+    return
+  }
+  router.push({ path: '/signup' })
 }
 </script>
 
@@ -206,5 +239,55 @@ function isActive(item) {
 .public-brand-nav__menu-item--active {
   color: var(--q-primary);
   font-weight: 700;
+}
+
+/* Landing page mockup: white bar, dark purple serif logo, centered links, purple pill CTAs */
+.public-brand-nav--light {
+  background: #ffffff !important;
+  box-shadow: 0 1px 0 rgba(61, 11, 82, 0.1);
+}
+
+.public-brand-nav--light .public-brand-nav__menu-btn {
+  color: #3d0b52;
+}
+
+.public-brand-nav--light .public-brand-nav__link {
+  color: #2d2745;
+  font-weight: 600;
+}
+
+.public-brand-nav--light .public-brand-nav__link:hover,
+.public-brand-nav--light .public-brand-nav__link:focus-visible {
+  color: #3d0b52;
+}
+
+.public-brand-nav--light .public-brand-nav__link--active {
+  color: #3d0b52;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.public-brand-nav--light .public-brand-nav__ghost-btn {
+  color: #3d0b52 !important;
+  border: 1px solid #3d0b52 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+}
+
+.public-brand-nav--light .public-brand-nav__ghost-btn:hover {
+  background: rgba(61, 11, 82, 0.08) !important;
+}
+
+.public-brand-nav--light .public-brand-nav__cta-btn {
+  min-width: 104px;
+  border-radius: 999px !important;
+  background: #3d0b52 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 600;
+}
+
+.public-brand-nav--light .public-brand-nav__cta-btn:hover {
+  background: #2d0840 !important;
 }
 </style>

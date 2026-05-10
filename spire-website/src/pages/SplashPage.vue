@@ -16,7 +16,7 @@ let timer = null
 
 onMounted(() => {
   timer = setTimeout(() => {
-    router.replace('/onboarding')
+    router.replace('/')
   }, 2600)
 })
 

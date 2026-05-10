@@ -1,5 +1,5 @@
 <template>
-  <q-page class="page">
+  <q-page class="page page--employer-dashboard">
     <div class="inner">
       <section class="welcome-block">
         <div class="welcome-row">
@@ -13,39 +13,28 @@
         </div>
       </section>
 
-      <section class="search-section">
-        <div class="search-bar-row">
-          <button
-            type="button"
-            class="search-icon-btn"
-            aria-label="Hide search filters"
-            @click.stop.prevent="closeSearchFilters"
-          >
-            <q-icon name="search" size="24px" class="search-field-icon" />
-          </button>
-          <div class="search-input-grow" @click="onSearchBarClick">
-            <q-input
-              v-model="search"
-              dense
-              borderless
-              placeholder="Search applicants by name, role, job, or location"
-              class="search-input"
-              @focus="openSearchFilters"
-              @click="onSearchBarClick"
-            >
-              <template v-if="search" #append>
-                <q-btn
-                  round
-                  dense
-                  flat
-                  icon="close"
-                  class="search-clear-btn"
-                  tabindex="-1"
-                  @click.stop="clearSearch"
-                />
-              </template>
-            </q-input>
-          </div>
+      <section class="filters-section">
+        <div class="filters-trigger-row">
+          <q-btn
+            flat
+            no-caps
+            dense
+            icon="tune"
+            class="filters-trigger-btn"
+            label="Filters"
+            :aria-expanded="showFilters"
+            @click="toggleFilters"
+          />
+          <q-btn
+            v-show="showFilters"
+            flat
+            no-caps
+            dense
+            icon="expand_less"
+            class="filters-trigger-btn filters-trigger-btn--quiet"
+            label="Hide filters"
+            @click="hideFilters"
+          />
         </div>
         <q-slide-transition>
           <div v-show="showFilters" class="filters-row">
@@ -141,10 +130,8 @@
         <EmployerApplicantCard
           v-for="applicant in filteredApplicants"
           :key="applicant.id"
+          variant="dashboard"
           :applicant="applicant"
-          @open="openApplicant"
-          @accept="markStatus($event, 'accepted')"
-          @reject="markStatus($event, 'rejected')"
         />
       </div>
     </div>
@@ -153,24 +140,24 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { useQuasar } from 'quasar'
+import { storeToRefs } from 'pinia'
 import EmployerApplicantCard from 'src/components/EmployerApplicantCard.vue'
 import { useAuthStore } from 'src/stores/authStore'
 import { useUserStore } from 'src/stores/userStore'
-import { getApplicationsForEmployer, updateApplicationStatus } from 'src/services/applicationService'
+import { useEmployerUiStore } from 'src/stores/employerUiStore'
+import { getApplicationsForEmployer } from 'src/services/applicationService'
 import { listCompaniesByOwner } from 'src/services/companyService'
 import { listCompanyJobs } from 'src/services/jobService'
 import { capitalizeProseWords } from 'src/utils/textFormat'
 
-const router = useRouter()
-const $q = useQuasar()
 const authStore = useAuthStore()
 const userStore = useUserStore()
+const employerUi = useEmployerUiStore()
+const { dashboardApplicantSearch, openDashboardFiltersEpoch } = storeToRefs(employerUi)
+
 const applicants = ref([])
 const companyJobs = ref([])
 const company = ref(null)
-const search = ref('')
 const showFilters = ref(false)
 const sortNewest = ref(true)
 const selectedFilters = ref({
@@ -266,7 +253,7 @@ const hasAcceptedApplicants = computed(() =>
 const filteredApplicants = computed(() => {
   const acceptedOnly = applicants.value.filter((a) => isAcceptedStatus(a.status))
   const list = acceptedOnly.filter((a) => {
-    const words = search.value.toLowerCase().trim().split(/\s+/).filter(Boolean)
+    const words = dashboardApplicantSearch.value.toLowerCase().trim().split(/\s+/).filter(Boolean)
     const searchOk = !words.length || words.every((w) => applicantSearchHaystack(a).includes(w))
     if (!searchOk) return false
 
@@ -309,47 +296,21 @@ const hiringProgress = computed(() => {
   return Math.round((closedJobsCount.value / total) * 100)
 })
 
-function openApplicant(id) {
-  router.push(`/employer/applicant/${id}`)
-}
-
-async function markStatus(id, status) {
-  try {
-    await updateApplicationStatus(id, status, authStore.user?.uid)
-    const item = applicants.value.find((a) => a.id === id)
-    if (item) item.status = status
-    $q.notify({ type: 'positive', message: `Application ${status}`, position: 'top' })
-  } catch (e) {
-    console.error(e)
-    $q.notify({
-      type: 'negative',
-      message: e?.message || 'Could not update application. Deploy latest Firestore rules.',
-      position: 'top',
-    })
-  }
-}
-
 function setFilter(key, value) {
   selectedFilters.value[key] = value
 }
 
-function openSearchFilters() {
-  showFilters.value = true
+function toggleFilters() {
+  showFilters.value = !showFilters.value
 }
 
-function closeSearchFilters() {
+function hideFilters() {
   showFilters.value = false
 }
 
-function clearSearch() {
-  search.value = ''
-}
-
-function onSearchBarClick(evt) {
-  const t = evt.target
-  if (t.closest?.('.search-icon-btn') || t.closest?.('.search-clear-btn')) return
-  openSearchFilters()
-}
+watch(openDashboardFiltersEpoch, () => {
+  showFilters.value = true
+})
 
 async function loadDashboardData() {
   const uid = authStore.user?.uid
@@ -385,16 +346,44 @@ watch(
   padding-top: 0;
 }
 
-.inner {
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 0 0 calc(24px + env(safe-area-inset-bottom));
+.page--employer-dashboard {
+  width: calc(100% + 2 * clamp(10px, 2vw, 22px));
+  max-width: none;
+  margin-left: calc(-1 * clamp(10px, 2vw, 22px));
+  margin-right: calc(-1 * clamp(10px, 2vw, 22px));
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+@media (max-width: 1023px) {
+  .page--employer-dashboard {
+    min-height: calc(
+      100dvh - var(--jsk-nav-height, 130px) - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+    );
+  }
+}
+
+.page--employer-dashboard .inner {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: 24px clamp(12px, 2vw, 28px) calc(28px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(61, 11, 82, 0.06);
+  box-shadow: 0 8px 32px rgba(15, 15, 30, 0.06);
 }
 
 .welcome-block {
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 
 .welcome-row {
@@ -426,69 +415,31 @@ watch(
   letter-spacing: -0.02em;
 }
 
-.search-section {
-  margin-bottom: 16px;
+.filters-section {
+  margin-bottom: 20px;
 }
 
-.search-bar-row {
+.filters-trigger-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-height: 48px;
-  padding: 4px 10px 4px 12px;
-  border-radius: 999px;
-  background-color: #4b1d5a;
-  box-sizing: border-box;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
-.search-input-grow {
-  flex: 1;
-  min-width: 0;
-  cursor: text;
+.filters-trigger-btn {
+  color: #3d0b52 !important;
+  font-weight: 600;
+  font-size: 13px;
 }
 
-.search-input :deep(.q-field__control) {
-  background: transparent;
-  box-shadow: none;
-  min-height: 40px;
-}
-
-.search-input :deep(.q-field__native),
-.search-input :deep(.q-placeholder) {
-  color: #ffffff;
-}
-
-.search-field-icon {
-  color: #ffffff;
-  opacity: 0.95;
-}
-
-.search-icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  margin: 0;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  cursor: pointer;
-  color: inherit;
-}
-
-.search-clear-btn {
-  color: #ffffff !important;
-}
-
-.search-clear-btn :deep(.q-icon) {
-  color: #ffffff !important;
+.filters-trigger-btn--quiet {
+  color: #8a8a8a !important;
+  font-weight: 500;
 }
 
 .filters-row {
-  margin-top: 10px;
+  margin-top: 4px;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -511,17 +462,17 @@ watch(
 
 .dashboard-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
-  gap: 20px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
 }
 
 .dash-card {
-  border-radius: 16px;
-  padding: 20px;
-  background: #fff;
-  border: 1px solid rgba(61, 11, 82, 0.08);
-  box-shadow: var(--spire-shadow-card, 0 4px 20px rgba(15, 15, 30, 0.06));
+  border-radius: 12px;
+  padding: 22px 20px;
+  background: #fafafa;
+  border: 1px solid rgba(61, 11, 82, 0.07);
+  box-shadow: 0 2px 12px rgba(15, 15, 30, 0.04);
   transition:
     box-shadow 0.25s ease,
     transform 0.2s ease,
@@ -529,9 +480,9 @@ watch(
 }
 
 .dash-card:hover {
-  box-shadow: 0 12px 32px rgba(61, 11, 82, 0.12);
+  box-shadow: 0 10px 28px rgba(61, 11, 82, 0.1);
   transform: translateY(-2px);
-  border-color: rgba(61, 11, 82, 0.14);
+  border-color: rgba(61, 11, 82, 0.12);
 }
 
 .dash-card--hiring {

@@ -180,14 +180,19 @@ watch(
 }
 
 .inner {
-  max-width: 480px;
+  width: 100%;
+  max-width: var(--spire-content-max);
   margin: 0 auto;
-  padding: 16px 16px 88px;
+  padding: 16px var(--spire-layout-gutter) 88px;
   box-sizing: border-box;
 }
 
 .post-new-btn {
+  display: block;
   width: 100%;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
   border-radius: 16px;
   background: #4b1d5a;
   color: #fff;

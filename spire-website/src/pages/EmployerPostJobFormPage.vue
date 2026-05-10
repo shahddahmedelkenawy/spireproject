@@ -406,9 +406,9 @@ onMounted(() => {
 
 .page-inner {
   width: 100%;
-  max-width: 480px;
+  max-width: var(--spire-content-max);
   margin: 0 auto;
-  padding: 24px 16px 24px;
+  padding: 24px var(--spire-layout-gutter) 24px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;

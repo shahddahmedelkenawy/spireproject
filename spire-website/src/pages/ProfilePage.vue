@@ -1091,7 +1091,7 @@ async function handleLogout() {
   loggingOut.value = true
   try {
     await authStore.logout()
-    router.push({ path: '/onboarding', query: { slide: 2 } })
+    router.push({ path: '/' })
   } finally {
     loggingOut.value = false
   }

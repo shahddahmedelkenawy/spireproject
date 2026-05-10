@@ -5,11 +5,14 @@ const routes = [
     children: [
       {
         path: '',
-        component: () => import('pages/IndexPage.vue'),
+        component: () => import('pages/LandingPage.vue'),
         meta: {
-          title: 'Home',
+          title: 'SPIRE — See ability, not disability',
           description:
             'SPIRE is an accessible hiring platform connecting employers and job seekers with clarity, dignity, and modern workflows.',
+          blankLight: true,
+          publicNavLight: true,
+          hideSiteFooter: true,
         },
       },
     ],
@@ -106,17 +109,40 @@ const routes = [
   {
     path: '/onboarding',
     component: () => import('layouts/BlankLayout.vue'),
-    children: [{ path: '', component: () => import('pages/OnboardingPage.vue') }],
+    children: [
+      {
+        path: '',
+        component: () => import('pages/LandingPage.vue'),
+        meta: {
+          title: 'SPIRE — See ability, not disability',
+          blankLight: true,
+          publicNavLight: true,
+          hideSiteFooter: true,
+        },
+      },
+    ],
   },
   {
     path: '/login',
     component: () => import('layouts/BlankLayout.vue'),
-    children: [{ path: '', component: () => import('pages/LoginPage.vue') }],
+    children: [
+      {
+        path: '',
+        component: () => import('pages/LoginPage.vue'),
+        meta: { hidePublicChrome: true, hideSiteFooter: true, title: 'Login' },
+      },
+    ],
   },
   {
     path: '/signup',
     component: () => import('layouts/BlankLayout.vue'),
-    children: [{ path: '', component: () => import('pages/SignUpPage.vue') }],
+    children: [
+      {
+        path: '',
+        component: () => import('pages/SignUpPage.vue'),
+        meta: { hidePublicChrome: true, hideSiteFooter: true, title: 'Sign up' },
+      },
+    ],
   },
   {
     path: '/role-selection',

@@ -390,7 +390,7 @@ function isPeerChatRoute() {
 }
 
 /**
- * Show the floating a11y button on splash, onboarding, and all non-chat routes.
+ * Show the floating a11y button on splash, landing, and all non-chat routes.
  * On human chat, the input-dock a11y button is used instead.
  * On Spira (assistant) chat, the dock control is hidden — keep this FAB visible.
  */

@@ -10,6 +10,8 @@
         v-model="applicantSearch"
         dense
         outlined
+        rounded
+        hide-bottom-space
         placeholder="Search by name, role, job, email, or location"
         class="applicant-search"
       >
@@ -39,6 +41,7 @@
         <EmployerApplicantCard
           v-for="applicant in filteredApplicants"
           :key="applicant.id"
+          variant="applications"
           :applicant="applicant"
           @open="openApplicant"
           @accept="markStatus($event, 'accepted')"
@@ -138,9 +141,11 @@ watch(
 }
 
 .inner {
-  max-width: 480px;
+  width: 100%;
+  max-width: var(--spire-content-max);
   margin: 0 auto;
-  padding: 0 16px calc(14px + env(safe-area-inset-bottom));
+  padding: 16px var(--spire-layout-gutter) calc(14px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
 }
 
 .title-row {
@@ -166,27 +171,39 @@ watch(
   margin-bottom: 16px;
 }
 
+.applicant-search :deep(.q-field) {
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
 .applicant-search :deep(.q-field__control) {
-  border-radius: 999px;
-  background-color: #4b1d5a;
-  color: #ffffff;
+  border-radius: 9999px !important;
+  min-height: 46px;
+  height: 46px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 4px rgba(15, 15, 30, 0.07);
+}
+
+.applicant-search :deep(.q-field__outline) {
+  border-radius: 9999px !important;
+  color: rgba(61, 11, 82, 0.18);
 }
 
 .applicant-search :deep(.q-field__native),
 .applicant-search :deep(.q-placeholder) {
-  color: #ffffff;
+  color: #1a1a1a;
 }
 
 .applicant-search-icon {
-  color: #ffffff;
+  color: #6b7280;
 }
 
 .applicant-search-clear-btn {
-  color: #ffffff !important;
+  color: #6b7280 !important;
 }
 
 .applicant-search-clear-btn :deep(.q-icon) {
-  color: #ffffff !important;
+  color: #6b7280 !important;
 }
 
 .empty-state {

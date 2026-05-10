@@ -1143,7 +1143,7 @@ async function handleLogout() {
   loggingOut.value = true
   try {
     await authStore.logout()
-    router.push({ path: '/onboarding', query: { slide: 2 } })
+    router.push({ path: '/' })
   } finally {
     loggingOut.value = false
   }
@@ -1169,9 +1169,11 @@ watch(
 }
 
 .emp-inner {
-  max-width: 480px;
+  width: 100%;
+  max-width: var(--spire-content-max);
   margin: 0 auto;
-  padding: 16px;
+  padding: 16px var(--spire-layout-gutter);
+  box-sizing: border-box;
 }
 
 .emp-inner--edit {

@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="hhh lpR fFf" class="employer-layout">
+  <q-layout :view="layoutView" class="employer-layout">
     <EmployerPremiumNav />
 
     <q-page-container
@@ -16,9 +16,16 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useQuasar } from 'quasar'
 import EmployerPremiumNav from 'src/components/EmployerPremiumNav.vue'
 
 const route = useRoute()
+const $q = useQuasar()
+
+/** Mobile keeps a top header row; desktop uses sidebar only (no header strip). */
+const layoutView = computed(() =>
+  $q.screen.lt.md ? 'lHh Lpr lff' : 'lhh Lpr lff'
+)
 
 const hideFooter = computed(
   () => route.meta?.hideFooter === true || route.path.includes('/employer/messages/chat')
@@ -34,12 +41,13 @@ const hideFooter = computed(
 
 .employer-container {
   width: 100%;
-  max-width: var(--spire-content-max);
+  max-width: none;
   margin: 0 auto;
   padding-top: 0;
   padding-bottom: env(safe-area-inset-bottom);
-  padding-left: var(--spire-layout-gutter);
-  padding-right: var(--spire-layout-gutter);
+  /* Tighter than global gutter so dashboard / employer pages use more horizontal space */
+  padding-left: clamp(10px, 2vw, 22px);
+  padding-right: clamp(10px, 2vw, 22px);
   box-sizing: border-box;
 }
 
